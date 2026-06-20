@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blogs</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -17,35 +21,70 @@
     }
 
     .container {
+      width: 100%;
+      max-width: 900px;
       text-align: center;
       padding: 2rem;
     }
 
     h1 {
-      font-size: 2rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
     }
 
-    a {
-      display: inline-block;
-      font-size: 1.1rem;
-      color: #0056b3;
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .tile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 160px;
+      padding: 1.5rem;
+      background: #ffffff;
+      border: 1px solid #e2e2e2;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       text-decoration: none;
-      border-bottom: 1px solid #0056b3;
-      padding-bottom: 0.2rem;
+      color: #222;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    a:hover {
-      color: #003d80;
-      border-bottom-color: #003d80;
+    .tile:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .tile-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .center-tile {
+      background: #fafafa;
     }
   </style>
 </head>
 <body>
   <main class="container">
     <h1>Blogs loading here...</h1>
-    <a href="mongodb-uc-backend/index.html">MongoDB as the Metadata Backbone for Unity Catalog</a>
+
+    <section class="tiles" aria-label="Site links">
+      <a class="tile" href="mongodb-uc-backend/index.html">
+        <span class="tile-title">MongoDB as the Metadata Backbone for Unity Catalog</span>
+      </a>
+
+      <a class="tile center-tile" href="about-me/index.html">
+        <span class="tile-title">About Me</span>
+      </a>
+    </section>
   </main>
 </body>
 </html>
