@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blogs</title>
+
+  <!-- Font Awesome Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  />
+
   <style>
     * {
       box-sizing: border-box;
@@ -12,9 +19,6 @@
     body {
       margin: 0;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       font-family: Arial, sans-serif;
       background: #f7f7f7;
       color: #222;
@@ -22,36 +26,45 @@
 
     .container {
       width: 100%;
-      max-width: 900px;
+      max-width: 1100px;
+      margin: 0 auto;
       text-align: center;
-      padding: 2rem;
+      padding: 3rem 2rem;
     }
-    
-
 
     h1 {
-      font-size: 2.2rem;
+      font-size: 2.4rem;
       font-weight: 700;
       margin-bottom: 2rem;
     }
 
-    .tiles {
+    h2 {
+      font-size: 1.5rem;
+      margin: 2.5rem 0 1.5rem;
+    }
+
+    .profile-tiles {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 1.5rem;
-      align-items: stretch;
+      margin-bottom: 2rem;
+    }
+
+    .blogs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 220px));
+      gap: 1.5rem;
       justify-content: center;
     }
 
     .tile {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 160px;
-      padding: 1.5rem;
       background: #ffffff;
       border: 1px solid #e2e2e2;
-      border-radius: 14px;
+      border-radius: 16px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       text-decoration: none;
       color: #222;
@@ -63,14 +76,47 @@
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
+    .profile-tile {
+      min-height: 140px;
+      padding: 1.5rem;
+      background: #fafafa;
+    }
+
+    .blog-tile {
+      width: 220px;
+      height: 220px;
+      padding: 1.25rem;
+    }
+
+    .tile i {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #0056b3;
+    }
+
     .tile-title {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 600;
       line-height: 1.4;
     }
 
-    .center-tile {
-      background: #fafafa;
+    @media (max-width: 640px) {
+      .container {
+        padding: 2rem 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .blogs-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .blog-tile {
+        width: 100%;
+        height: 200px;
+      }
     }
   </style>
 </head>
@@ -78,18 +124,30 @@
   <main class="container">
     <h1>Blogs loading here...</h1>
 
-    <section class="tiles" aria-label="Site links">
-      <a class="tile center-tile" href="about-me/index.html">
+    <section class="profile-tiles" aria-label="Profile links">
+      <a class="tile profile-tile" href="about-me/index.html">
+        <i class="fa-solid fa-user"></i>
         <span class="tile-title">About Me</span>
       </a>
-      <a class="tile" href="mongodb-uc-backend/index.html">
+
+      <a class="tile profile-tile" href="resume/index.html">
+        <i class="fa-solid fa-file-lines"></i>
+        <span class="tile-title">Resume</span>
+      </a>
+    </section>
+
+    <h2>Blogs</h2>
+
+    <section class="blogs-grid" aria-label="Blog links">
+      <a class="tile blog-tile" href="mongodb-uc-backend/index.html">
+        <i class="fa-solid fa-database"></i>
         <span class="tile-title">MongoDB as the Metadata Backbone for Unity Catalog</span>
       </a>
-      <a class="tile" href="ai-native-data-mesh/index.html">
+
+      <a class="tile blog-tile" href="ai-native-data-mesh/index.html">
+        <i class="fa-solid fa-diagram-project"></i>
         <span class="tile-title">Building an AI-Native Data Mesh with Metadata at the Core</span>
       </a>
-
-      
     </section>
   </main>
 </body>
