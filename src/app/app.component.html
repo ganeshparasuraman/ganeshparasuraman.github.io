@@ -1,0 +1,65 @@
+<mat-toolbar class="app-toolbar">
+  <a routerLink="/" class="brand" aria-label="Home">
+    <span class="brand-mark">G</span>
+    <span class="brand-text">Ganesh&nbsp;Parasuraman</span>
+  </a>
+
+  <span class="spacer"></span>
+
+  <!-- Desktop navigation -->
+  <nav class="desktop-nav">
+    <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      Home
+    </a>
+    <button mat-button [matMenuTriggerFor]="blogMenu">
+      Blogs
+      <mat-icon iconPositionEnd>expand_more</mat-icon>
+    </button>
+    <a mat-button routerLink="/about-me" routerLinkActive="active">About</a>
+    <a mat-button routerLink="/resume" routerLinkActive="active">Resume</a>
+  </nav>
+
+  <button
+    mat-icon-button
+    class="theme-toggle"
+    (click)="theme.toggle()"
+    [matTooltip]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+    aria-label="Toggle light and dark theme"
+  >
+    <mat-icon>{{ theme.mode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+  </button>
+
+  <!-- Mobile navigation -->
+  <button mat-icon-button class="mobile-nav-trigger" [matMenuTriggerFor]="mobileMenu" aria-label="Open menu">
+    <mat-icon>menu</mat-icon>
+  </button>
+</mat-toolbar>
+
+<mat-menu #blogMenu="matMenu">
+  @for (blog of blogs; track blog.path) {
+    <a mat-menu-item [routerLink]="blog.path">
+      <mat-icon>{{ blog.icon }}</mat-icon>
+      <span>{{ blog.title }}</span>
+    </a>
+  }
+</mat-menu>
+
+<mat-menu #mobileMenu="matMenu">
+  <a mat-menu-item routerLink="/"><mat-icon>home</mat-icon><span>Home</span></a>
+  <a mat-menu-item routerLink="/about-me"><mat-icon>person</mat-icon><span>About Me</span></a>
+  <a mat-menu-item routerLink="/resume"><mat-icon>description</mat-icon><span>Resume</span></a>
+  @for (blog of blogs; track blog.path) {
+    <a mat-menu-item [routerLink]="blog.path">
+      <mat-icon>{{ blog.icon }}</mat-icon>
+      <span>{{ blog.title }}</span>
+    </a>
+  }
+</mat-menu>
+
+<main class="app-content">
+  <router-outlet />
+</main>
+
+<footer class="app-footer">
+  <p>© {{ year }} Ganesh Parasuraman · Software engineering &amp; data platform notes.</p>
+</footer>

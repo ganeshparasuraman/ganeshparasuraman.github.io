@@ -1,0 +1,33 @@
+<header class="article-hero">
+  <div class="hero-inner">
+    <span class="eyebrow">{{ eyebrow }}</span>
+    <h1>{{ heading }}</h1>
+    @if (subtitle) {
+      <p class="subtitle">{{ subtitle }}</p>
+    }
+    @if (meta.length) {
+      <mat-chip-set aria-label="Article details">
+        @for (m of meta; track m) {
+          <mat-chip disableRipple>{{ m }}</mat-chip>
+        }
+      </mat-chip-set>
+    }
+  </div>
+</header>
+
+<div class="article-wrap" [class.has-toc]="toc.length">
+  @if (toc.length) {
+    <nav class="toc" aria-label="Table of contents">
+      <h2>Contents</h2>
+      @for (item of toc; track item.id) {
+        <a [routerLink]="[]" [fragment]="item.id">{{ item.label }}</a>
+      }
+    </nav>
+  }
+
+  <mat-card class="article-card" appearance="outlined">
+    <mat-card-content class="article-body">
+      <ng-content />
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,258 @@
+<app-article-layout
+  eyebrow="Healthcare Data Engineering"
+  heading="From X12 EDI to queryable NDJSON — a config-driven Spring Boot service"
+  subtitle="How we built a flexible 835/837 healthcare-claims parser that flattens every segment to newline-delimited JSON, with YAML-defined schemas and pluggable cloud storage."
+  [meta]="['Java 21', 'Spring Boot 3.2', 'Smooks', 'MongoDB', 'S3 · GCS · Azure']"
+  [toc]="toc"
+>
+  <h2 id="problem">The problem with EDI</h2>
+  <p>
+    If you've worked anywhere near US healthcare billing, you've met <strong>X12 EDI</strong> — the
+    decades-old electronic data interchange format that carries claims (<code>837</code>) and
+    remittances (<code>835</code>) between providers, clearinghouses, and payers. A single file looks
+    like this:
+  </p>
+  <pre><code>ISA*00*          *00*          *ZZ*PAYER123456789 *ZZ*PROVIDER98765  *230101*1200*^*00501*000000905*0*P*:~
+GS*HP*PAYER123*PROVIDER987*20230101*1200*1*X*005010X221A1~
+ST*835*0001~
+BPR*C*1500.00*C*ACH*CCP*01*111000025*DA*123456789~
+CLP*PAT001*1*1500.00*1350.00*150.00*HM*PAYER-ICN-001*11*1~
+CAS*CO*45*100.00**253*50.00~
+SVC*HC:99213*250.00*200.00**1~</code></pre>
+  <p>
+    It's compact, positional, and deeply nested — segments group into loops, loops nest under
+    hierarchical levels, and the meaning of an element depends entirely on which segment and which
+    loop it lives in. It is also almost impossible to query directly. Analysts want columns and rows;
+    EDI gives you tilde-delimited segments with colon-separated composites and a 300-page
+    implementation guide.
+  </p>
+  <blockquote>
+    The goal: take any 835 or 837 file and flatten <em>100% of its data</em> into a format a data
+    engineer can actually query — without writing a bespoke parser for every segment type.
+  </blockquote>
+
+  <h2 id="goal">What we set out to build</h2>
+  <p>
+    A Spring Boot service that accepts an EDI file and emits <strong>NDJSON</strong>
+    (newline-delimited JSON) — one JSON object per EDI segment, each tagged with its segment type,
+    loop context, and the correlation keys that stitch the document hierarchy back together. One line
+    per segment means downstream tools can filter with <code>grep</code>, load with
+    <code>pl.read_ndjson()</code>, or query with DuckDB's <code>read_ndjson_auto()</code>.
+  </p>
+  <p>A sample output line for a claim-payment segment:</p>
+  <pre><code>&#123;"segment_type":"CLP","loop_context":"2100","isa_control_number":"000000905",
+ "st_control_number":"0001","clp01_patient_control_number":"PAT001",
+ "clp03_total_claim_charge_amount":1500.0,"clp04_claim_payment_amount":1350.0,
+ "source_filename":"sample_835.edi","parsed_at":"2026-06-20T08:11:11Z"&#125;</code></pre>
+
+  <h2 id="arch">Architecture</h2>
+  <p>The pipeline has four clean stages, and almost every behavior is driven by configuration rather than code:</p>
+  <pre class="ascii-diagram"><code>  cloud / local            Smooks + custom            YAML segment            cloud / local
+  input location           X12 SAX reader             schemas + trackers      output location
+  ┌──────────────┐         ┌──────────────┐           ┌──────────────┐        ┌──────────────┐
+  │  S3 / GCS /  │  get()  │  tokenize    │  events   │  build typed │  put() │  S3 / GCS /  │
+  │  Azure / FS  │────────▶│  every       │──────────▶│  JSON row    │───────▶│  Azure / FS  │
+  │  (EDI file)  │         │  segment     │           │  per segment │        │ (segments.   │
+  └──────────────┘         └──────────────┘           └──────────────┘        │  ndjson)     │
+        ▲                                                     ▲                └──────────────┘
+        │  StorageClient                          SegmentTypeRegistry
+        │  (per LocationType)                     CorrelationKeyTracker
+        │                                         LoopContextTracker
+   ┌─────────────────────────────────────────────────────────────────┐
+   │  MongoDB  ·  job_configs (input/output/creds)  ·  job_runs        │
+   └─────────────────────────────────────────────────────────────────┘</code></pre>
+  <div class="pill-row">
+    <span class="token-chip">controller → service</span>
+    <span class="token-chip">StorageClientFactory</span>
+    <span class="token-chip">SmooksEdiParser</span>
+    <span class="token-chip">JsonRecordBuilder</span>
+    <span class="token-chip">NdjsonWriter</span>
+  </div>
+
+  <h2 id="parsing">Parsing X12 with Smooks</h2>
+  <p>
+    Rather than hand-roll a tokenizer, we use a custom SAX <code>XMLReader</code> that streams each
+    EDI segment as an event, feeding it through the <a href="https://www.smooks.org/" target="_blank" rel="noopener">Smooks</a>
+    pipeline. The reader detects delimiters straight from the ISA header (element, component,
+    repetition, and segment terminators are declared in fixed positions of the interchange envelope),
+    so it adapts to whatever separators a trading partner uses.
+  </p>
+  <p>
+    Each segment surfaces as a <code>SegmentEvent</code> exposing positional accessors —
+    <code>getElement(2)</code>, <code>getComponent(1, 0)</code> for composite sub-elements. The parser
+    core never changes; everything that varies between segment types lives in configuration.
+  </p>
+
+  <h2 id="yaml">Config-driven segments</h2>
+  <p>
+    Every segment type is described by a YAML file. The Avro/JSON field layout and type coercion are
+    derived from this config at startup — no Java code per segment. Adding a new segment is a drop-in
+    file plus a restart.
+  </p>
+  <pre><code><span class="tok-y">segment</span>: CLP
+<span class="tok-y">description</span>: Claim Payment Information
+<span class="tok-y">transactionSets</span>: [835]
+<span class="tok-y">correlationKeys</span>:
+  - isa_control_number
+  - st_control_number
+<span class="tok-y">fields</span>:
+  - &#123; name: clp01_patient_control_number, position: 1, type: string,
+      setsCorrelationKey: clp_patient_control_number &#125;
+  - &#123; name: clp03_total_claim_charge_amount, position: 3, type: decimal &#125;
+  - &#123; name: clp04_claim_payment_amount,      position: 4, type: decimal &#125;</code></pre>
+  <p>
+    Field types map cleanly to JSON: <code>string</code>, <code>integer</code>, <code>decimal</code>,
+    plus <code>composite</code> (flattened into multiple columns) and <code>repeatingGroup</code>
+    (more on that below). The service ships with 25 segment configs covering the common envelope plus
+    835 and 837 segments.
+  </p>
+
+  <h2 id="correlation">Correlation keys: stitching the hierarchy</h2>
+  <p>
+    An EDI document is a tree: <code>ISA → GS → ST → CLP → SVC</code> for remittances,
+    <code>ISA → GS → ST → HL → CLM → LX</code> for claims. Every flattened row needs the breadcrumb
+    back to the root so the pieces can be re-joined downstream. A <code>CorrelationKeyTracker</code>
+    walks the segment stream and maintains the current "where am I in the tree" pointer — and
+    crucially, <em>clears stale child keys</em> when a parent changes, so one claim's service-line
+    numbers never bleed into the next.
+  </p>
+  <p>We pushed even this logic into config. The cascade tree is declared as explicit leaf-to-root paths:</p>
+  <pre><code><span class="tok-y">paths</span>:
+  <span class="tok-c"># 837: ISA → GS → ST → HL → CLM → LX</span>
+  - [isa_control_number, gs_group_control_number, st_control_number,
+     hl_id, clm_patient_account_number, lx_line_number]
+
+  <span class="tok-c"># 835: ISA → GS → ST → CLP → SVC</span>
+  - [isa_control_number, gs_group_control_number, st_control_number,
+     clp_patient_control_number, svc_line_number]</code></pre>
+  <p>
+    Setting any key clears everything to its right in any path containing it. The runtime is a
+    six-line loop, and supporting a brand-new transaction set (270/271, 834, …) is a single new line
+    — no Java change.
+  </p>
+
+  <h2 id="cas">Repeating groups: the CAS segment</h2>
+  <p>
+    Some segments pack repeating tuples into their positions. The Claim Adjustment Segment
+    (<code>CAS</code>) — which explains every adjustment dollar — carries up to six
+    <em>(reason&nbsp;code, amount, quantity)</em> triples across positions 2–19. Writing 19 fields by
+    hand is miserable, so we added a <code>repeatingGroup</code> directive:
+  </p>
+  <pre><code>  - <span class="tok-y">name</span>: cas_adjustment
+    <span class="tok-y">type</span>: repeatingGroup
+    <span class="tok-y">startPosition</span>: 2
+    <span class="tok-y">repeat</span>: 6
+    <span class="tok-y">stride</span>: 3
+    <span class="tok-y">group</span>:
+      - &#123; name: reason_code, offset: 0, type: string &#125;
+      - &#123; name: amount,      offset: 1, type: decimal &#125;
+      - &#123; name: quantity,    offset: 2, type: decimal &#125;</code></pre>
+  <p>
+    This expands into flat columns — <code>cas_adjustment_1_reason_code</code>,
+    <code>cas_adjustment_1_amount</code>, … through occurrence 6 — with unused slots emitted as JSON
+    null. The same directive will later cover <code>PLB</code> (stride 2) and the 837 diagnosis
+    segment <code>HI</code>.
+  </p>
+  <div class="callout">
+    <span class="callout-label">Why this matters</span>
+    A CAS row carries the parent claim's <code>clp_patient_control_number</code> and the service
+    line's <code>svc_line_number</code>, so every adjusted dollar joins straight back to its claim and
+    line in a downstream SQL query — no manual EDI walking required.
+  </div>
+
+  <h2 id="cloud">Pluggable cloud I/O</h2>
+  <p>
+    The service started life writing to local disk. To make it production-ready, both input and
+    output became <strong>configurable cloud locations</strong> behind a single
+    <code>StorageClient</code> interface with four implementations:
+  </p>
+  <table>
+    <thead>
+      <tr><th>Backend</th><th>SDK</th><th>Credentials</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>S3</code></td><td>AWS SDK v2</td><td>access key/secret + optional session token; endpoint override for MinIO</td></tr>
+      <tr><td><code>GCS</code></td><td>google-cloud-storage</td><td>service-account JSON or application-default</td></tr>
+      <tr><td><code>AZURE</code></td><td>azure-storage-blob</td><td>account key, SAS token, or connection string</td></tr>
+      <tr><td><code>LOCAL</code></td><td>java.nio</td><td>none — also the hermetic test path</td></tr>
+    </tbody>
+  </table>
+  <p>
+    A job is described by a JSON document in MongoDB. The service reads the EDI from the input
+    location, parses it to a local staging file, then uploads the NDJSON and a <code>meta.json</code>
+    manifest to the output location — so you can read from S3 and write to GCS in the same job:
+  </p>
+  <pre><code>&#123;
+  <span class="tok-s">"id"</span>: <span class="tok-s">"claims-daily-s3-to-gcs"</span>,
+  <span class="tok-s">"ediType"</span>: <span class="tok-s">"auto"</span>,
+  <span class="tok-s">"input"</span>: &#123;
+    <span class="tok-s">"type"</span>: <span class="tok-s">"S3"</span>, <span class="tok-s">"bucket"</span>: <span class="tok-s">"acme-edi-inbound"</span>,
+    <span class="tok-s">"path"</span>: <span class="tok-s">"835/2026-06-20/remit.edi"</span>,
+    <span class="tok-s">"credentials"</span>: &#123; <span class="tok-s">"region"</span>: <span class="tok-s">"us-east-1"</span>,
+                      <span class="tok-s">"accessKeyId"</span>: <span class="tok-s">"env:AWS_ACCESS_KEY_ID"</span>,
+                      <span class="tok-s">"secretAccessKey"</span>: <span class="tok-s">"env:AWS_SECRET_ACCESS_KEY"</span> &#125;
+  &#125;,
+  <span class="tok-s">"output"</span>: &#123;
+    <span class="tok-s">"type"</span>: <span class="tok-s">"GCS"</span>, <span class="tok-s">"bucket"</span>: <span class="tok-s">"acme-edi-curated"</span>, <span class="tok-s">"path"</span>: <span class="tok-s">"ndjson/835"</span>,
+    <span class="tok-s">"credentials"</span>: &#123; <span class="tok-s">"serviceAccountJson"</span>: <span class="tok-s">"env:GCP_SA_JSON"</span> &#125;
+  &#125;
+&#125;</code></pre>
+  <div class="callout">
+    <span class="callout-label">Design note</span>
+    The parser core stays oblivious to the cloud. Input arrives as an <code>InputStream</code>; output
+    is staged to a local temp file and uploaded on completion. That single seam kept the Smooks
+    pipeline, trackers, and NDJSON writer entirely unchanged when we added cloud support.
+  </div>
+
+  <h2 id="secrets">Secrets &amp; credentials</h2>
+  <p>
+    Credential values are never required inline. Any value can be a <em>reference</em> —
+    <code>env:NAME</code> pulls from an environment variable, <code>config:dotted.key</code> from
+    Spring config — resolved at runtime by a pluggable <code>SecretResolver</code>. A future
+    HashiCorp Vault resolver (prefix <code>vault:</code>) drops in with zero call-site changes. When a
+    config is read back through the API, inline literals are masked to <code>***</code> while harmless
+    references are shown as-is.
+  </p>
+
+  <h2 id="api">Using the API</h2>
+  <p>The whole lifecycle is four endpoints:</p>
+  <table>
+    <thead>
+      <tr><th>Method &amp; path</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>POST /api/v1/edi/configs</code></td><td>Register a job config (credentials masked on read)</td></tr>
+      <tr><td><code>POST /api/v1/edi/parse?configId=…</code></td><td>Run a job — cloud-in → parse → cloud-out</td></tr>
+      <tr><td><code>GET /api/v1/edi/jobs</code></td><td>List completed runs</td></tr>
+      <tr><td><code>GET /api/v1/edi/jobs/&#123;id&#125;/segments.ndjson</code></td><td>Stream the NDJSON back from its output location</td></tr>
+    </tbody>
+  </table>
+  <p>A run returns segment counts and the output URI:</p>
+  <pre><code><span class="tok-c"># Trigger a parse</span>
+curl -X POST <span class="tok-s">"http://localhost:8082/api/v1/edi/parse?configId=claims-daily-s3-to-gcs"</span>
+
+<span class="tok-c"># → &#123; "ediType": "835", "totalRecords": 19, "outputType": "GCS",</span>
+<span class="tok-c">#     "outputUri": "gs://acme-edi-curated/ndjson/835/&lt;jobId&gt;/segments.ndjson", ... &#125;</span></code></pre>
+  <p>And querying the result is finally pleasant:</p>
+  <pre><code><span class="tok-k">import</span> polars <span class="tok-k">as</span> pl
+df = pl.read_ndjson(<span class="tok-s">"segments.ndjson"</span>)
+df.filter(pl.col(<span class="tok-s">"segment_type"</span>) == <span class="tok-s">"CAS"</span>) \
+  .group_by(<span class="tok-s">"cas01_group_code"</span>) \
+  .agg(pl.col(<span class="tok-s">"cas_adjustment_1_amount"</span>).sum())
+<span class="tok-c"># CO → 150.00,  PR → 50.00   — every adjustment dollar, attributed</span></code></pre>
+
+  <h2 id="takeaways">Takeaways</h2>
+  <ul>
+    <li><strong>Push variation into config.</strong> Segment layouts, the correlation-key cascade, and storage backends are all data, not code. New segments and transaction sets are YAML edits + a restart.</li>
+    <li><strong>Keep one stable parser core.</strong> A single <code>InputStream</code>-in / staged-file-out seam let us bolt on MongoDB and three cloud SDKs without touching the Smooks pipeline.</li>
+    <li><strong>Make the hard format joinable.</strong> Correlation keys on every row turn a nested, positional document into flat tables that re-join with a plain SQL <code>JOIN</code>.</li>
+    <li><strong>Test the abstraction, not the cloud.</strong> The <code>LOCAL</code> backend exercises the exact cloud-in/cloud-out wiring with no credentials, keeping the suite hermetic.</li>
+  </ul>
+
+  <p class="source-note">
+    The result: drop an 835 or 837 anywhere — a bucket, a blob, a local path — point a JSON config at
+    it, and get back clean, queryable NDJSON with every segment, every adjustment, and every
+    correlation key intact. Built with Java 21 · Spring Boot 3.2 · Smooks · MongoDB · AWS / GCP /
+    Azure SDKs.
+  </p>
+</app-article-layout>

@@ -1,0 +1,311 @@
+@use '@angular/material' as mat;
+
+// ── Material 3 theme ──────────────────────────────────────────────
+// theme-type: color-scheme makes every Material system variable resolve
+// through CSS light-dark(), so flipping `color-scheme` flips the whole UI.
+html {
+  // Smooth in-page anchor scrolling for blog table-of-contents links.
+  color-scheme: light;
+  scroll-behavior: smooth;
+
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$cyan-palette,
+      theme-type: color-scheme,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+// Dark mode: ThemeService toggles this class on <html>.
+html.dark-theme {
+  color-scheme: dark;
+}
+
+// ── Base ──────────────────────────────────────────────────────────
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font-family: var(--mat-sys-body-large-font, Roboto, 'Helvetica Neue', sans-serif);
+  line-height: 1.6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+// Offset anchored sections so the sticky toolbar doesn't cover headings.
+:target {
+  scroll-margin-top: 88px;
+}
+
+// ── Shared article / content system ───────────────────────────────
+// Kept global (not component-scoped) so it is reused across every blog
+// page and stays well under the per-component style budget.
+
+.article-body {
+  font-size: 1.05rem;
+
+  h2 {
+    margin: 2.4rem 0 0.8rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    color: var(--mat-sys-on-surface);
+  }
+
+  h2:first-child {
+    margin-top: 0;
+  }
+
+  h3 {
+    margin: 1.8rem 0 0.6rem;
+    font-size: 1.2rem;
+    color: var(--mat-sys-on-surface);
+  }
+
+  p {
+    margin: 1rem 0;
+  }
+
+  ul,
+  ol {
+    margin: 0.8rem 0 1.2rem;
+    padding-left: 1.4rem;
+  }
+
+  li {
+    margin: 0.4rem 0;
+  }
+
+  strong {
+    color: var(--mat-sys-on-surface);
+    font-weight: 600;
+  }
+
+  .lead {
+    font-size: 1.15rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  blockquote {
+    margin: 1.4rem 0;
+    padding: 0.8rem 1.2rem;
+    border-left: 4px solid var(--mat-sys-primary);
+    background: var(--mat-sys-surface-container);
+    border-radius: 0 10px 10px 0;
+    color: var(--mat-sys-on-surface-variant);
+    font-style: italic;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.92rem;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    vertical-align: top;
+  }
+
+  th {
+    font-weight: 600;
+    background: var(--mat-sys-surface-container);
+  }
+}
+
+// Inline + block code
+code {
+  font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.86em;
+}
+
+:not(pre) > code {
+  background: var(--mat-sys-surface-container-high);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 5px;
+  padding: 1px 6px;
+  color: var(--mat-sys-tertiary);
+}
+
+pre {
+  margin: 1.25rem 0;
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-highest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--mat-sys-on-surface);
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+// Pre-formatted ASCII diagrams keep their whitespace.
+.ascii-diagram {
+  white-space: pre;
+}
+
+// Lightweight syntax-highlight tokens (readable on both themes via light-dark()).
+.tok-c { color: light-dark(#6a737d, #8b98a5); font-style: italic; } // comment
+.tok-k { color: light-dark(#cf222e, #ff7b72); }                     // keyword
+.tok-s { color: light-dark(#0a7d33, #7ee787); }                     // string
+.tok-n { color: light-dark(#0550ae, #79c0ff); }                     // name/type
+.tok-y { color: light-dark(#9a5b00, #e3b341); }                     // yaml key
+
+// ── Reusable accent / callout / chip / diagram primitives ─────────
+.callout {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  border-left: 5px solid var(--mat-sys-primary);
+
+  .callout-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+}
+
+// Generic responsive card grid used by several diagrams.
+.grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.panel-card {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+  background: var(--mat-sys-surface-container-low);
+
+  strong {
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+}
+
+// Token chips (metadata, tags, pills)
+.token-chip {
+  display: inline-block;
+  font-family: 'Roboto Mono', ui-monospace, monospace;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.token-chip.accent {
+  border-color: var(--mat-sys-primary);
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.collection-grid,
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.25rem 0;
+}
+
+// Flow / node diagram primitives (vertical step diagrams)
+.flow-diagram {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.flow-node {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  background: var(--mat-sys-surface-container-low);
+
+  strong {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: var(--mat-sys-on-surface);
+  }
+
+  small {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.flow-arrow {
+  text-align: center;
+  color: var(--mat-sys-primary);
+  font-size: 1.3rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+// Generic two-column comparison (e.g. old vs new, mismatch panels)
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+@media (max-width: 640px) {
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Tag row + source attribution used at the foot of articles.
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 2.25rem;
+}
+
+.source-note {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  font-size: 0.92rem;
+  color: var(--mat-sys-on-surface-variant);
+}

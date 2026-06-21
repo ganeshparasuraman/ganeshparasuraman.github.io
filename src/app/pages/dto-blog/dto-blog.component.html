@@ -1,0 +1,321 @@
+<app-article-layout
+  eyebrow="Data Engineering · Architecture"
+  heading="The Organisational Data Twin"
+  subtitle="A practitioner's guide to building systems that reflect operational reality — not just its history."
+  [meta]="['Peerislands', '6 min read', 'Architectural Diagrams']"
+  [toc]="toc"
+>
+  <!-- ── INTRO ── -->
+  <section id="intro">
+    <div class="section-tag">Introduction</div>
+    <h2>Two customers. One demand.</h2>
+    <p>At Peerislands, two very different clients needed the same thing. One managed millions of marketing artwork jobs and wanted to know whether work committed in their tracker was <em>actually done</em>. The other processed millions of live telemetry messages per second and needed to trace how a single message cascaded into events — before failures became incidents.</p>
+    <p>Neither used the term. Both were asking for a <strong>Digital Twin of their Organisation (DTO)</strong>: a system that answers <em>"What is happening, and who is affected?"</em> — then reasons forward to <em>"What should we do?"</em></p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">Two customers · same underlying need</div>
+      <div class="row">
+        <div class="col">
+          <div class="sec-label">Customer A · Artwork Platform</div>
+          <div class="node teal"><div class="nl">Domain</div><div class="nt">Millions of marketing art jobs</div></div>
+          <div class="node"><div class="ns">→ Is committed work actually done?<br>→ Which master data is governed?<br>→ What is each job's current state?</div></div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="col" style="flex:0;min-width:150px;justify-content:center">
+          <div class="node teal" style="text-align:center">
+            <div class="nt">Digital Twin of the Org</div>
+            <div class="ns">Live · Queryable<br>Structural + Operational</div>
+          </div>
+        </div>
+        <div class="arrow">←</div>
+        <div class="col">
+          <div class="sec-label">Customer B · Telemetry Platform</div>
+          <div class="node teal"><div class="nl">Domain</div><div class="nt">Millions of msgs/sec from live equipment</div></div>
+          <div class="node"><div class="ns">→ How does data propagate?<br>→ Are propagation graphs healthy?<br>→ What failed silently?</div></div>
+        </div>
+      </div>
+    </div>
+
+    <p>Gartner introduced the DTO in 2017 as a dynamic software model that reflects how an organisation operates, responds to change, and delivers value. It is not a vendor product — it is an <strong>architectural pattern</strong> data engineering teams must build.</p>
+  </section>
+
+  <!-- ── THE GAP ── -->
+  <section id="gap">
+    <div class="section-tag">The Problem</div>
+    <h2>Pipelines move data. Business needs a living model.</h2>
+    <p>Traditional data engineering answers retrospective questions well. But as every company becomes a software company, decision speed matters — and most platforms answer the wrong question.</p>
+
+    <div class="pullquote">Platforms answer: what happened last week? Operators need: what is blocked right now, and what is at risk?</div>
+
+    <div class="dpanel">
+      <div class="dpanel-title">The structural mismatch</div>
+      <div class="row">
+        <div class="col">
+          <div class="sec-label">Traditional Data Platform</div>
+          <div class="node"><div class="ns">Extract → Transform → Load</div></div>
+          <div class="node"><div class="ns">Curated warehouse layers</div></div>
+          <div class="node"><div class="ns">Batch reporting &amp; dashboards</div></div>
+          <div class="node amber"><div class="nl">Answers</div><div class="nt">What happened last week?</div></div>
+        </div>
+        <div class="vs">⚡<span>Structural<br>Mismatch</span>⚡</div>
+        <div class="col">
+          <div class="sec-label">What Operators Actually Need</div>
+          <div class="node"><div class="ns">Current state of every entity</div></div>
+          <div class="node"><div class="ns">Downstream impact of any event</div></div>
+          <div class="node"><div class="ns">At-risk commitments &amp; silent failures</div></div>
+          <div class="node live"><div class="nl">Needs</div><div class="nt">What is happening right now?</div></div>
+        </div>
+      </div>
+      <div class="dpanel-note">The mismatch is <strong>structural, not technical</strong>. Data teams build pipelines. Business teams operate living systems.</div>
+    </div>
+
+    <p>Data engineering must evolve beyond movement. It must model business state and connect it to organisational structure — so decision-makers understand <strong>consequences, not just conditions</strong>.</p>
+  </section>
+
+  <!-- ── WHAT IS DTO ── -->
+  <section id="what">
+    <div class="section-tag">The Concept</div>
+    <h2>What is a Digital Twin of an Organisation?</h2>
+    <p>A DTO layers fast-changing operational data — events, failures, delays — on top of the slow-changing structural architecture that Enterprise Architects already maintain: capabilities, systems, teams, strategies. That combination creates a <strong>feedback loop</strong> no prior platform could: any consequence question answered quickly and accurately.</p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">DTO = Structural layer + Operational layer → Feedback loop</div>
+      <div class="layer-stack">
+        <div class="layer">
+          <div class="layer-label dim">Structural</div>
+          <div class="layer-body">
+            <div class="sec-label">Enterprise Architects · slow-changing</div>
+            <div class="chip-row">
+              <span class="chip">Capabilities</span><span class="chip">Systems</span><span class="chip">Teams</span>
+              <span class="chip">Processes</span><span class="chip">Strategies</span><span class="chip">Outcomes</span>
+            </div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-label">Operational</div>
+          <div class="layer-body">
+            <div class="sec-label">Data Engineers · fast-changing, event-driven</div>
+            <div class="chip-row">
+              <span class="chip teal">Live Events</span><span class="chip teal">State Changes</span><span class="chip teal">Delays</span>
+              <span class="chip teal">Propagation</span><span class="chip teal">Failures</span>
+            </div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-label">DTO</div>
+          <div class="layer-body" style="flex-direction:row;align-items:center;flex-wrap:wrap">
+            <div class="node" style="flex:1;min-width:160px"><div class="nl">Consequence question</div><div class="ns">What will this change affect?<br>Who needs to be involved?</div></div>
+            <div class="arrow">→</div>
+            <div class="node live" style="flex:1;min-width:160px"><div class="nl">Answered quickly</div><div class="nt">Blast radius · Teams · Timelines</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="dpanel-note">A data platform <strong>stores and serves data</strong>. A DTO <strong>reflects the state of the organisation and the consequences of acting on it</strong>.</div>
+    </div>
+
+    <p>Gartner identifies twelve DTO use cases — from risk and M&amp;A to performance management and process outsourcing. It is not a vertical solution for one industry. It is a <strong>horizontal capability every enterprise needs</strong>.</p>
+  </section>
+
+  <!-- ── THE PATTERN ── -->
+  <section id="pattern">
+    <div class="section-tag">Core Architecture</div>
+    <h2>Every DTO expresses the same three-part pattern.</h2>
+    <p>The artwork platform and the telemetry platform look nothing alike — but both are built from the same three components: operational state, propagation graph, and wellness signal.</p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">The universal DTO pattern</div>
+      <div class="cards3">
+        <div class="card3">
+          <div class="card3-head">1 · Operational State</div>
+          <div class="dpanel-note" style="border:none;padding:0;margin:0">Every entity moves through states. The DTO treats state as part of a live business process.</div>
+          <div class="state">Job: created → approved → done</div>
+          <div class="state">Asset: active → degraded → failed</div>
+          <div class="state">Message: received → published → dropped</div>
+        </div>
+        <div class="card3">
+          <div class="card3-head amber">2 · Propagation Graph</div>
+          <div class="dpanel-note" style="border:none;padding:0;margin:0">One event rarely affects one thing. Map the full consequence path.</div>
+          <div class="state">Delayed job → campaign → customer SLA</div>
+          <div class="state">Dropped msg → stale asset → bad decision</div>
+          <div class="state">Failed event → suppressed alert → incident</div>
+        </div>
+        <div class="card3">
+          <div class="card3-head muted">3 · Wellness Signal</div>
+          <div class="dpanel-note" style="border:none;padding:0;margin:0">Measure business health, not infrastructure health. Close the loop.</div>
+          <div class="state">Artwork: committed work actually done?</div>
+          <div class="state">Telemetry: msgs within SLA windows?</div>
+          <div class="state">Assets: early degradation patterns?</div>
+        </div>
+      </div>
+      <div class="dpanel-note">Wellness signals transform the DTO from an <strong>observability tool</strong> into a <strong>decision-support system</strong>.</div>
+    </div>
+  </section>
+
+  <!-- ── THREE QUESTIONS ── -->
+  <section id="questions">
+    <div class="section-tag">What It Must Do</div>
+    <h2>Three questions, each harder than the last.</h2>
+    <p>A DTO must work in both the operations room and the boardroom. Each level of capability requires a more sophisticated engineering foundation than the one before.</p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">Three levels of DTO capability</div>
+      <div class="q-stack">
+        <div class="q-row">
+          <div class="q-left"><div class="q-level">Level 1 · Observability</div><div class="q-text">What is happening right now?</div></div>
+          <div class="q-right">
+            <div class="q-tech">Requires → Event-aware engineering</div>
+            <div class="chip-row"><span class="chip">Streaming ingestion</span><span class="chip">Incremental processing</span><span class="chip teal">Current entity state</span></div>
+            <div class="dpanel-note" style="border:none;padding:0;margin:0">Which jobs are active? Which queues are growing? Which assets are reporting?</div>
+          </div>
+        </div>
+        <div class="q-row">
+          <div class="q-left"><div class="q-level">Level 2 · Impact</div><div class="q-text">Who and what is affected?</div></div>
+          <div class="q-right">
+            <div class="q-tech">Requires → Relationship awareness</div>
+            <div class="chip-row"><span class="chip">Graph traversal</span><span class="chip">EA structural data</span><span class="chip amber">Blast radius query</span></div>
+            <div class="dpanel-note" style="border:none;padding:0;margin:0">Job → Campaign → Customer → Commitment. Message → Asset → Operation → Outcome.</div>
+          </div>
+        </div>
+        <div class="q-row highlight">
+          <div class="q-left"><div class="q-level">Level 3 · Intelligence</div><div class="q-text">What should happen next?</div></div>
+          <div class="q-right">
+            <div class="q-tech">Requires → Observability + Impact + Prediction</div>
+            <div class="chip-row"><span class="chip">SLA forecasting</span><span class="chip">Intervention recommendations</span><span class="chip teal">AI agent reasoning</span></div>
+            <div class="dpanel-note" style="border:none;padding:0;margin:0">The shift from observability to intelligence — shorter time-to-decision at operational speed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p>Without Level 1, every decision runs on stale data. Without Level 2, no one can see the blast radius of a change. Level 3 — where the DTO helps leaders evaluate consequences before acting — is where it becomes genuinely <strong>actionable intelligence</strong>.</p>
+  </section>
+
+  <!-- ── ARCHITECTURE ── -->
+  <section id="architecture">
+    <div class="section-tag">Building It</div>
+    <h2>Five building blocks — each with real trade-offs.</h2>
+    <p>A DTO requires a different architectural mindset from traditional reporting. The most common mistake: treating each component as a technology choice rather than an engineering discipline.</p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">DTO architecture stack</div>
+      <div class="layer-stack">
+        <div class="layer">
+          <div class="layer-label">Streaming</div>
+          <div class="layer-body">
+            <div class="sec-label">Event Streaming · stream business events, not raw data</div>
+            <div class="row" style="align-items:center">
+              <div class="node amber" style="flex:1;min-width:140px"><div class="nl">✗ Avoid — Data event</div><div class="ns">CDC: "this row changed"</div></div>
+              <div class="arrow">vs</div>
+              <div class="node live" style="flex:1;min-width:140px"><div class="nl">✓ Target — Business event</div><div class="nt">job.state.changed + context + SLA</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-label">Graph</div>
+          <div class="layer-body">
+            <div class="sec-label">Graph-aware Models · relationships as first-class citizens</div>
+            <div class="chip-row">
+              <span class="chip teal">Job</span>→<span class="chip teal">Campaign</span>→<span class="chip teal">Customer</span>→<span class="chip teal">Commitment</span>
+              <span style="color:var(--mat-sys-on-surface-variant)">·</span>
+              <span class="chip">Message</span>→<span class="chip">Device</span>→<span class="chip">Team</span>→<span class="chip">Outcome</span>
+            </div>
+            <div class="dpanel-note" style="border:none;padding:0;margin:0">Model entity + relationships together. Property graph over document store, or graph index alongside lakehouse.</div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-label dim">Metadata</div>
+          <div class="layer-body">
+            <div class="sec-label">Unified Metadata · the control plane</div>
+            <div class="chip-row">
+              <span class="chip">Business definitions</span><span class="chip">Ownership</span><span class="chip">Schema contracts</span>
+              <span class="chip">Lineage</span><span class="chip">Quality rules</span><span class="chip">Processing history</span>
+            </div>
+            <div class="dpanel-note warn" style="border:none;padding:0;margin:0">⚠ Common failure: teams invest in streaming, then can't explain why a wellness signal fired. Metadata is a design input — not documentation output.</div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-label dim">Query</div>
+          <div class="layer-body">
+            <div class="sec-label">Real-time Query Layers · right pattern for each question</div>
+            <div class="row" style="flex-wrap:wrap">
+              <div class="node" style="flex:1;min-width:110px"><div class="nl">Historical</div><div class="nt">Iceberg / Delta</div></div>
+              <div class="node live" style="flex:1;min-width:110px"><div class="nl">Current State</div><div class="nt">Flink / Redis</div></div>
+              <div class="node" style="flex:1;min-width:110px"><div class="nl">Discovery</div><div class="nt">Search index</div></div>
+              <div class="node" style="flex:1;min-width:110px"><div class="nl">Relationships</div><div class="nt">Graph index</div></div>
+            </div>
+            <div class="dpanel-note" style="border:none;padding:0;margin:0">Exposed via SQL (analytical) + APIs (operational + AI agents)</div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-label">AI</div>
+          <div class="layer-body">
+            <div class="sec-label">AI Agents · grounded reasoning on top of the DTO</div>
+            <div class="chip-row">
+              <span class="chip teal">Current State</span>+<span class="chip teal">Metadata</span>+<span class="chip teal">Lineage</span>+<span class="chip teal">Impact Graphs</span>
+              →<span class="chip teal">Agent: Investigate · Explain · Recommend · Act</span>
+            </div>
+            <div class="dpanel-note" style="border:none;padding:0;margin:0">The DTO observes and models. The agent reasons and acts. Every decision traceable back to operational data.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p>The goal is not one database for everything — it is the <strong>right query layer for the right operational question</strong>. AI fails in production not because models are weak but because data is fragmented, stale, or ungoverned. The DTO fixes that foundation.</p>
+  </section>
+
+  <!-- ── CHARTER ── -->
+  <section id="charter">
+    <div class="section-tag">The Shift</div>
+    <h2>The new charter for data engineering teams.</h2>
+    <p>The DTO lives at the intersection of two layers that have never worked together: the operational layer owned by data engineers, and the structural layer maintained by enterprise architects. Building it requires both teams to collaborate — and a new definition of what success means.</p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">Old charter vs. new charter</div>
+      <div class="charter">
+        <div class="charter-col">
+          <div class="charter-head old">Pipeline-Centric (Old)</div>
+          <div class="charter-item striked">Move data reliably</div>
+          <div class="charter-item striked">Maintain ETL jobs &amp; batch SLAs</div>
+          <div class="charter-item striked">Build curated tables</div>
+          <div class="charter-item striked">Serve dashboards</div>
+          <div class="charter-item striked">Reduce data defects</div>
+          <div class="dpanel-note">Measured by: pipeline uptime · dashboard delivery</div>
+        </div>
+        <div class="charter-col">
+          <div class="charter-head new">Outcome-Centric (New)</div>
+          <div class="charter-item active">Reflect current business state</div>
+          <div class="charter-item active">Connect operational data to org structure</div>
+          <div class="charter-item active">Make impact traceable</div>
+          <div class="charter-item active">Shorten time-to-decision</div>
+          <div class="charter-item active">Enable safe AI grounding</div>
+          <div class="dpanel-note">Measured by: blind spots reduced · root-cause speed · decision quality</div>
+        </div>
+      </div>
+      <div class="dpanel-note">
+        <span class="chip teal">Data Engineering · operational layer</span> ⟷
+        <span class="chip amber">Enterprise Architecture · structural layer</span> =
+        <span class="chip">DTO lives at the intersection</span>
+      </div>
+    </div>
+
+    <p>The old responsibilities — pipelines, curated tables, governed data — still matter. But they are no longer sufficient. The measure shifts: did we detect risk earlier? Did we enable faster decisions? Did we help the business understand itself?</p>
+  </section>
+
+  <div class="conclusion">
+    <p>The future of enterprise data engineering is not better pipelines. It is systems that understand the business — and help the business understand itself.</p>
+  </div>
+
+  <div class="medium-cta">
+    <p>Read the full original article on Medium</p>
+    <a mat-flat-button href="https://tech.ganesh.ky/the-organisational-data-twin-c8ffd828b7ae" target="_blank" rel="noopener noreferrer">
+      <mat-icon>open_in_new</mat-icon>
+      Read on Medium
+    </a>
+  </div>
+
+  <p class="source-note">
+    Based on original work at Peerislands · Gartner DTO Framework (2017) · Ardoq EA Evolution (2024) ·
+    Marc Andreessen, a16z (2011) ·
+    <a href="https://tech.ganesh.ky/the-organisational-data-twin-c8ffd828b7ae" target="_blank" rel="noopener noreferrer">Original article on Medium →</a>
+  </p>
+</app-article-layout>

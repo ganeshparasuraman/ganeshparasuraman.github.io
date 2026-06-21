@@ -1,0 +1,201 @@
+<app-article-layout
+  eyebrow="Unity Catalog · MongoDB · Metadata Platform"
+  heading="MongoDB as the Metadata Backbone for Unity Catalog"
+  subtitle="A practical view of adding MongoDB as a flexible persistence backend for Unity Catalog, and extending the catalog into a governed metadata-driven control plane."
+  [meta]="['By Ganesh Parasuraman', '5 min read', 'June 2026']"
+  [toc]="toc"
+>
+  <p>
+    Modern data platforms are no longer just about storing data. They need to manage data products,
+    pipelines, access rules, quality checks, machine learning assets, and business metadata in one
+    place.
+  </p>
+  <p>
+    That is where Unity Catalog plays an important role. It acts as a common catalog and governance
+    layer for data and AI assets. It helps teams discover, organize, secure, and manage data across
+    different tools and platforms.
+  </p>
+  <p>
+    As the catalog becomes more central to the data platform, the way it stores metadata also becomes
+    important. A catalog should be flexible enough to support different storage backends based on
+    enterprise needs.
+  </p>
+
+  <div class="callout">
+    <span class="callout-label">Core idea</span>
+    Adding MongoDB as a persistence option gives Unity Catalog more flexibility without forcing the
+    existing backend model to be removed.
+  </div>
+
+  <div class="flow-diagram">
+    <div class="flow-node">
+      <strong>Unity Catalog Services</strong>
+      <small>Catalog, governance, policies, and data platform interfaces</small>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-node">
+      <strong>Repository Interfaces</strong>
+      <small>Clean abstraction between business logic and persistence</small>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-node">
+      <strong>Existing Backend or MongoDB</strong>
+      <small>Optional pluggable metadata backend selected by configuration</small>
+    </div>
+  </div>
+
+  <h2 id="why-mongodb">Why MongoDB?</h2>
+  <p>Catalog metadata is often naturally document-shaped.</p>
+  <ul>
+    <li>A table has columns.</li>
+    <li>A function has parameters.</li>
+    <li>A pipeline has steps.</li>
+    <li>A data product has rules, owners, properties, and access policies.</li>
+  </ul>
+  <p>These relationships are easier to represent when related information can be stored together.</p>
+  <p>
+    MongoDB is well suited for this kind of metadata because it allows related details to live inside
+    a single document. Instead of spreading information across many separate relational tables,
+    MongoDB can keep connected metadata closer together.
+  </p>
+  <p>This makes the catalog easier to extend, especially when the platform needs to manage more than just tables.</p>
+
+  <h2 id="beyond-tables">Extending the Catalog Beyond Tables</h2>
+  <p>
+    The long-term vision is not only to store traditional catalog metadata. The same approach can
+    also support pipeline definitions and data quality rules.
+  </p>
+  <p>For example, JSON-based Spark and Polars pipeline definitions can be stored in MongoDB. These definitions can describe:</p>
+  <ul>
+    <li>Ingestion pipelines</li>
+    <li>Transformation pipelines</li>
+    <li>Data quality checks</li>
+    <li>Pipeline configuration</li>
+    <li>Access policies</li>
+  </ul>
+  <p>The Unity Catalog frontend can then be extended to allow users to create, modify, and govern these pipelines from a common interface.</p>
+  <p>This turns the catalog into more than a metadata store. It becomes a control plane for the data platform.</p>
+
+  <h2 id="backend-safe">Keeping the Existing Backend Safe</h2>
+  <p>The goal is not to remove the existing persistence model.</p>
+  <p>
+    Unity Catalog can continue to use its existing backend. MongoDB is added as an optional backend.
+    This means teams can choose the backend that fits their needs without disturbing the existing
+    architecture.
+  </p>
+  <p>A single configuration setting decides whether the system uses the existing backend or MongoDB.</p>
+  <p>This keeps adoption simple and reduces migration risk.</p>
+
+  <h2 id="architecture">A Flexible Backend Architecture</h2>
+  <p>The design follows a clean approach.</p>
+  <p>
+    The application talks to repository interfaces instead of directly talking to a specific
+    database. Behind those interfaces, the system can use either the existing backend or MongoDB.
+  </p>
+  <p>This means the business logic does not need to change when the backend changes.</p>
+  <p>In simple terms:</p>
+  <pre><code>Unity Catalog services
+        ↓
+Repository interfaces
+        ↓
+Existing backend or MongoDB backend</code></pre>
+  <p>This makes the persistence layer pluggable.</p>
+
+  <h2 id="collections">From Many Tables to Fewer Collections</h2>
+  <p>
+    The original persistence model uses multiple relational tables to store metadata. In the MongoDB
+    model, these are grouped into fewer collections.
+  </p>
+  <p>The design reduces 17 relational tables into 5 MongoDB collections:</p>
+  <div class="collection-grid">
+    <span class="token-chip accent">metastore</span>
+    <span class="token-chip accent">catalog</span>
+    <span class="token-chip accent">identity</span>
+    <span class="token-chip accent">model_versions</span>
+    <span class="token-chip accent">delta_commits</span>
+  </div>
+  <p>
+    Most catalog-related objects are stored in the <strong>catalog</strong> collection. A field
+    called <strong>type</strong> identifies whether the document is a catalog, schema, table,
+    function, volume, model, or external location.
+  </p>
+
+  <h2 id="embedded">Why Embedded Metadata Helps</h2>
+  <p>
+    In a relational model, table information and column information are often stored separately. To
+    understand a table fully, the system may need to look across multiple tables.
+  </p>
+  <p>In MongoDB, the table and its columns can be stored together.</p>
+  <p>That makes the document easier to read and manage because all important table details are available in one place.</p>
+  <p>The same idea applies to function parameters, properties, dependencies, and future pipeline definitions.</p>
+
+  <h2 id="metadata-driven">Better Fit for a Metadata-Driven Platform</h2>
+  <p>Modern data platforms are becoming more metadata-driven.</p>
+  <p>
+    Metadata is no longer just descriptive information. It now drives how pipelines run, how quality
+    rules are applied, how access is controlled, and how data products are published.
+  </p>
+  <p>This makes MongoDB a useful backend choice because it can store flexible and evolving metadata structures.</p>
+  <p>As new platform capabilities are added, the metadata model can grow without forcing major changes to a rigid relational schema.</p>
+
+  <h2 id="governance">Governance and Access Control</h2>
+  <p>A catalog is also a governance layer.</p>
+  <p>
+    By storing catalog metadata, pipeline definitions, and access policies together, the platform can
+    provide better control over who can see, change, and execute different assets.
+  </p>
+  <p>
+    For example, a team may be allowed to create a pipeline but not approve it for production. Another
+    team may be allowed to view data quality rules but not modify them.
+  </p>
+  <p>This type of governance becomes easier when the catalog acts as the central control point.</p>
+
+  <h2 id="why-this-matters">Why This Matters</h2>
+  <p>Adding MongoDB support makes Unity Catalog more adaptable.</p>
+  <p>
+    It gives platform teams more choice in how they manage metadata. It also opens the door to
+    managing pipeline configuration, quality rules, and governance policies in a more flexible way.
+  </p>
+  <p>The key benefits are:</p>
+  <div class="grid-auto">
+    <div class="panel-card">✓ Backend flexibility</div>
+    <div class="panel-card">✓ Cleaner metadata organization</div>
+    <div class="panel-card">✓ Easier support for nested metadata</div>
+    <div class="panel-card">✓ Better foundation for pipeline governance</div>
+    <div class="panel-card">✓ Room to extend Unity Catalog beyond traditional table metadata</div>
+  </div>
+
+  <h2 id="final-thoughts">Final Thoughts</h2>
+  <p>Unity Catalog is becoming an important control plane for modern data and AI platforms.</p>
+  <p>
+    Adding MongoDB as a persistence backend makes that control plane more flexible and extensible. It
+    allows metadata to be stored in a way that matches how modern data platforms are actually
+    structured.
+  </p>
+  <p>
+    Tables, columns, functions, models, pipelines, rules, and policies are all connected. A
+    document-oriented backend helps represent those connections more naturally.
+  </p>
+  <p>This is a practical step toward a more flexible, governed, and metadata-driven data platform.</p>
+
+  <h2 id="code-repository">Code Repository</h2>
+  <p>
+    <a href="https://github.com/Your-AI-Mesh-Architecture/unitycatalog" target="_blank" rel="noopener">
+      GitHub — Your-AI-Mesh-Architecture/unitycatalog
+    </a>
+  </p>
+
+  <h2 id="further-readings">Further Readings</h2>
+  <p>
+    For a broader view of how metadata can become the foundation of an AI-native data platform, read:
+    <a href="https://tech.ganesh.ky/building-an-ai-native-data-mesh-with-metadata-at-the-core-6ae7dcf22018" target="_blank" rel="noopener">
+      Building an AI-Native Data Mesh with Metadata at the Core</a>.
+  </p>
+  <p>
+    That article explains how metadata, governance, data products, pipeline definitions, and quality
+    rules can work together to create a more intelligent and self-service data platform. This
+    MongoDB-backed Unity Catalog approach can be seen as a continuation of that idea, where the
+    catalog becomes not just a place to register data assets, but a control plane for managing
+    pipelines, policies, and platform intelligence.
+  </p>
+</app-article-layout>

@@ -1,0 +1,36 @@
+<section class="home-hero">
+  <div class="home-inner">
+    <h1>Engineering &amp; Data Platform Notes</h1>
+    <p class="lede">
+      Writing by Ganesh Parasuraman on metadata-driven data platforms, healthcare
+      data engineering, and AI-native architecture.
+    </p>
+  </div>
+</section>
+
+<div class="home-inner">
+  <section class="tile-grid profiles" aria-label="Profile links">
+    @for (p of profiles; track p.path) {
+      <a [routerLink]="p.path" class="tile-link">
+        <mat-card appearance="outlined" class="tile profile-tile">
+          <mat-icon class="tile-icon">{{ p.icon }}</mat-icon>
+          <span class="tile-title">{{ p.title }}</span>
+        </mat-card>
+      </a>
+    }
+  </section>
+
+  <h2 class="section-heading">Blogs</h2>
+
+  <section class="tile-grid blogs" aria-label="Blog links">
+    @for (blog of blogs; track blog.path) {
+      <a [routerLink]="blog.path" class="tile-link">
+        <mat-card appearance="outlined" class="tile blog-tile">
+          <mat-icon class="tile-icon">{{ blog.icon }}</mat-icon>
+          <span class="tile-title">{{ blog.title }}</span>
+          <span class="tile-blurb">{{ blog.blurb }}</span>
+        </mat-card>
+      </a>
+    }
+  </section>
+</div>
