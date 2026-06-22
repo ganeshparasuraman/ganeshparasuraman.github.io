@@ -40,6 +40,12 @@ export const routes: Routes = [
     title: "The Organisational Data Twin — A Data Engineer's Guide",
   },
   {
+    path: 'dto-blog-part2',
+    loadComponent: () =>
+      import('./pages/dto-blog-part2/dto-blog-part2.component').then((m) => m.DtoBlogPart2Component),
+    title: 'The Storage War Underneath Your Data Twin — HTAP, LTAP & the DTO',
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent),

@@ -1,0 +1,362 @@
+<app-article-layout
+  eyebrow="Part 2 of 2 · Data Engineering · Storage"
+  heading="The Storage War Underneath Your Data Twin"
+  subtitle="HTAP promised unification. LTAP claims to have delivered it. Here is what actually changes for teams building a DTO — and what does not."
+  [meta]="['Peerislands', '7 min read', 'June 2026']"
+  [toc]="toc"
+>
+  <a class="part-link" routerLink="/dto-blog">
+    <mat-icon>arrow_back</mat-icon>
+    Read Part 1: The Organisational Data Twin
+  </a>
+
+  <!-- ═══ CONTEXT ═══ -->
+  <section id="context">
+    <div class="section-tag">The Setup</div>
+    <h2>Part 1 left a question unanswered.</h2>
+    <p>In Part 1 we established that a <strong>Digital Twin of an Organisation (DTO)</strong> needs two things working together: a structural layer (capabilities, systems, teams) and an operational layer (live events, state changes, failures). The operational layer is what makes the DTO useful in real time.</p>
+    <p>But we glossed over something critical: <strong>where does that operational data actually live, and how does it get from the transactional system that writes it to the analytical system that reads it?</strong> For forty years, the answer was: a pipeline. ETL, CDC, replication. A copy of the data, with a lag, and a team responsible for maintaining the bridge.</p>
+
+    <div class="pullquote">Every DTO we have built has a hidden seam: the gap between the database that captures business events and the engine that reasons over them. That seam has a name — it is called the data pipeline — and it is the most fragile part of the architecture.</div>
+
+    <p>One major shift happened in June 2026 that forced a rethink. Databricks, at its Data + AI Summit, announced LTAP — an architecture that claims to have finally closed it. It is directly relevant to anyone building a DTO.</p>
+  </section>
+
+  <!-- ═══ LTAP ═══ -->
+  <section id="ltap">
+    <div class="section-tag">Enter LTAP</div>
+    <h2>Databricks' answer: unify at the storage layer, not the engine layer.</h2>
+    <p>On June 16 2026, Databricks announced LTAP — Lake Transactional/Analytical Processing. The core insight is subtle but important: previous unification attempts tried to make one query engine handle both workloads. LTAP keeps dedicated engines (Postgres for transactions, Spark/Lakehouse for analytics) but makes them <strong>share a single copy of the data in open formats</strong> on object storage.</p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">LTAP — one storage layer, separate compute engines</div>
+      <div class="layer-stack">
+        <div class="layer">
+          <div class="layer-label">Compute</div>
+          <div class="layer-body">
+            <div class="sec-label">Separate engines · each optimised for its workload</div>
+            <div class="row">
+              <div class="node teal" style="flex:1;min-width:160px">
+                <div class="nl">Transactional</div>
+                <div class="nt">Lakebase (serverless Postgres)</div>
+                <div class="ns">Full ACID · row-level locking · sub-ms p99</div>
+              </div>
+              <div class="arrow plus">+</div>
+              <div class="node teal" style="flex:1;min-width:160px">
+                <div class="nl">Analytical</div>
+                <div class="nt">Lakehouse (Spark + Lakehouse//RT)</div>
+                <div class="ns">Vectorised · columnar · sub-100ms queries</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="layer accent-bg">
+          <div class="layer-label navy">Storage</div>
+          <div class="layer-body">
+            <div class="sec-label">Single copy · open formats · unified governance</div>
+            <div class="row">
+              <div class="node" style="flex:1;min-width:130px">
+                <div class="nl">Format</div>
+                <div class="nt">Delta + Iceberg</div>
+                <div class="ns">Postgres writes directly in open columnar format</div>
+              </div>
+              <div class="node" style="flex:1;min-width:130px">
+                <div class="nl">Governance</div>
+                <div class="nt">Unity Catalog</div>
+                <div class="ns">Single identity, permissions &amp; audit for all engines</div>
+              </div>
+              <div class="node" style="flex:1;min-width:130px">
+                <div class="nl">Result</div>
+                <div class="nt">No replicas · no ETL · no connectors</div>
+                <div class="ns">Object storage (S3 / GCS / ADLS)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-label dim">Key claim</div>
+          <div class="layer-body">
+            <div class="dp-note ok">✓ Transactional writes land in Delta/Iceberg at the point of write. The Lakehouse reads the same copy. There is no ETL step, no CDC connector, no schema mapping job to maintain — and no replication lag between the system of record and the system of reasoning.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p>Databricks also announced <strong>Lakehouse//RT</strong> alongside LTAP — a real-time analytics engine that delivers sub-100ms query latency directly on Delta and Iceberg tables, handling up to 12,000 queries per second. This removes the last reason to maintain a separate real-time serving tier next to the lakehouse.</p>
+    <p>The honest caveat: LTAP was announced at Data + AI Summit 2026 and is listed as "coming soon." No independent benchmarks of the single-storage claim under high-write OLTP load exist yet. The production proof is still emerging.</p>
+  </section>
+
+  <!-- ═══ COMPARE ═══ -->
+  <section id="compare">
+    <div class="section-tag">The Landscape</div>
+    <h2>HTAP, zero-ETL, LTAP — what is actually different?</h2>
+    <p>Three architectures now compete for the "unified" label. They differ fundamentally in <em>where</em> they attempt unification and what tradeoffs that creates for DTO builders.</p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">Three unification approaches — where each closes the seam</div>
+      <div class="tp-cards-wrap">
+        <div class="tp-card">
+          <div class="tp-card-head amber">HTAP (Engine-level)</div>
+          <div class="dp-note">One engine handles both workloads. Row + columnar storage maintained in parallel.</div>
+          <div class="tp-state amber">Examples: SAP HANA, TiDB, SingleStore</div>
+          <div class="tp-state amber">Write amplification: every commit writes to both stores</div>
+          <div class="tp-state amber">Resource contention: OLAP scans spike OLTP latency</div>
+          <div class="tp-state amber">Isolation: none without physical separation (which reintroduces lag)</div>
+          <div class="dp-note warn">⚠ Two engines hidden inside one product. Neither performs at full capability.</div>
+        </div>
+        <div class="tp-card">
+          <div class="tp-card-head navy">Zero-ETL (Replication-level)</div>
+          <div class="dp-note">Separate engines, automated CDC pipeline between them. Marketed as "zero ETL" — still two copies.</div>
+          <div class="tp-state">Examples: Aurora → Redshift, ClickHouse + ClickPipes CDC</div>
+          <div class="tp-state">Replication lag: seconds to minutes</div>
+          <div class="tp-state">Governance: two catalogs to keep aligned</div>
+          <div class="tp-state">Operational cost: CDC connectors break on schema change</div>
+          <div class="dp-note">Best current practice — the seam still exists, but manageable with good schema discipline and pipeline observability.</div>
+        </div>
+        <div class="tp-card">
+          <div class="tp-card-head teal">LTAP (Storage-level)</div>
+          <div class="dp-note">Separate engines, single copy of data in open formats. No pipeline between them.</div>
+          <div class="tp-state">Example: Databricks LTAP (Lakebase + Lakehouse)</div>
+          <div class="tp-state">Lag: zero — transactional write IS the analytical record</div>
+          <div class="tp-state">Governance: Unity Catalog, single identity model</div>
+          <div class="tp-state">Tradeoff: currently Databricks-only; production benchmarks emerging</div>
+          <div class="dp-note ok">✓ Architecturally closes the seam. Awaiting production validation at scale.</div>
+        </div>
+      </div>
+    </div>
+
+    <p>ClickHouse's unified data stack (Postgres + ClickHouse + ClickPipes CDC) is the strongest zero-ETL implementation available today — sub-second replication, tight schema contracts, query federation back to Postgres. For most DTO teams <strong>not</strong> on Databricks, this is the right answer right now.</p>
+  </section>
+
+  <!-- ═══ DTO IMPACT ═══ -->
+  <section id="dto-impact">
+    <div class="section-tag">What Changes for the DTO</div>
+    <h2>How this reshapes the five DTO building blocks.</h2>
+    <p>In Part 1 we described five components every DTO needs: event streaming, graph-aware models, unified metadata, real-time query layers, and AI agents. The storage unification shift touches each one — some profoundly, some not at all.</p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">DTO building blocks — what changes with storage-level unification</div>
+      <div class="layer-stack">
+
+        <div class="layer">
+          <div class="layer-label">Streaming</div>
+          <div class="layer-body">
+            <div class="sec-label">Event Streaming</div>
+            <div class="row">
+              <div class="node amber" style="flex:1;min-width:200px">
+                <div class="nl">Before (zero-ETL)</div>
+                <div class="ns">Business event → Postgres → CDC connector → Kafka → analytical engine. Schema drift breaks the connector. Lag accumulates.</div>
+              </div>
+              <div class="arrow">→</div>
+              <div class="node live" style="flex:1;min-width:200px">
+                <div class="nl">With storage unification</div>
+                <div class="nt">Write = stream. No connector.</div>
+                <div class="ns">Postgres write lands in Delta/Iceberg. Lakehouse reads it immediately. The event IS the stream record.</div>
+              </div>
+            </div>
+            <div class="dp-note">Still design schemas around business state transitions — that discipline does not change. What changes is there is no pipeline to break.</div>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="layer-label dim">Graph</div>
+          <div class="layer-body">
+            <div class="sec-label">Graph-Aware Models</div>
+            <div class="dp-note">No change. Relationship modelling is an application-layer concern, independent of storage unification. Graph indexes alongside the lakehouse remain necessary.</div>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="layer-label">Metadata</div>
+          <div class="layer-body">
+            <div class="sec-label">Unified Metadata — biggest beneficiary</div>
+            <div class="node teal">
+              <div class="nl">With storage unification</div>
+              <div class="nt">Unity Catalog = one governance model for all engines</div>
+              <div class="ns">Lineage, ownership, quality rules, permissions — all enforced on the single storage copy. No dual-catalog drift between OLTP and OLAP metadata.</div>
+            </div>
+            <div class="dp-note ok">✓ The Part 1 warning — "teams invest in streaming then can't explain why a wellness signal fired" — is structurally solved. One catalog, one lineage graph, one source of truth.</div>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="layer-label dim">Query</div>
+          <div class="layer-body">
+            <div class="sec-label">Real-Time Query Layers — Lakehouse//RT changes the equation</div>
+            <div class="row">
+              <div class="node" style="flex:1;min-width:150px">
+                <div class="nl">Before</div>
+                <div class="ns">Lakehouse (historical) + Redis/Flink (live state) + Search index + Graph index — four separate tiers</div>
+              </div>
+              <div class="arrow">→</div>
+              <div class="node teal" style="flex:1;min-width:220px">
+                <div class="nl">With Lakehouse//RT</div>
+                <div class="nt">Sub-100ms on governed Delta/Iceberg</div>
+                <div class="ns">12,000 queries/sec, as low as 10ms on smaller datasets. Eliminates the dedicated real-time serving tier for most DTO query patterns.</div>
+              </div>
+            </div>
+            <div class="dp-note warn">⚠ Graph index and search index remain separate concerns. Storage unification does not eliminate the need for relationship traversal infrastructure.</div>
+          </div>
+        </div>
+
+        <div class="layer accent-bg">
+          <div class="layer-label">AI</div>
+          <div class="layer-body">
+            <div class="sec-label">AI Agents — the primary motivation for LTAP</div>
+            <div class="dp-note">Agents do not tolerate pipeline lag. A reasoning system acting on stale data acts on a lie. Databricks' framing: <strong>"AI agents, not people, are now the database's primary users."</strong></div>
+            <div class="row">
+              <div class="node" style="flex:1;min-width:160px">
+                <div class="nl">Human-speed analytics</div>
+                <div class="ns">Minutes-old data is fine for a dashboard. The seam is tolerable.</div>
+              </div>
+              <div class="arrow">→</div>
+              <div class="node live" style="flex:1;min-width:160px">
+                <div class="nl">Agent-speed reasoning</div>
+                <div class="nt">Stale data = wrong action</div>
+                <div class="ns">An agent routing a customer, triggering an order, or flagging a risk must read the current commit — not the last replication cycle.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ NEW STACK ═══ -->
+  <section id="stack">
+    <div class="section-tag">Practical Guidance</div>
+    <h2>What the DTO stack looks like today — and where it is heading.</h2>
+    <p>The right answer depends on your platform and timeline. Here is the honest assessment.</p>
+
+    <div class="dpanel">
+      <div class="dpanel-title">DTO storage strategy — now vs. target state</div>
+      <div class="layer-stack">
+
+        <div class="layer">
+          <div class="layer-label amber">Now</div>
+          <div class="layer-body">
+            <div class="sec-label">Best current practice — composable, zero-ETL</div>
+            <div class="row">
+              <div class="node teal" style="flex:1;min-width:150px">
+                <div class="nl">Transactional</div>
+                <div class="nt">Postgres (NVMe-backed)</div>
+                <div class="ns">Aurora, RDS, Supabase, or Neon</div>
+              </div>
+              <div class="arrow">→</div>
+              <div class="node" style="flex:1;min-width:150px">
+                <div class="nl">CDC / Replication</div>
+                <div class="nt">ClickPipes / PeerDB / Debezium</div>
+                <div class="ns">Sub-second lag. Design schemas around business state transitions.</div>
+              </div>
+              <div class="arrow">→</div>
+              <div class="node live" style="flex:1;min-width:150px">
+                <div class="nl">Analytical</div>
+                <div class="nt">ClickHouse or Databricks Lakehouse</div>
+                <div class="ns">Columnar, indexed, queryable by DTO agents via SQL + APIs</div>
+              </div>
+            </div>
+            <div class="dp-note">Build this now. It works today. The CDC seam is real but manageable with good schema discipline and observability on the pipeline.</div>
+          </div>
+        </div>
+
+        <div class="layer accent-bg">
+          <div class="layer-label">Target</div>
+          <div class="layer-body">
+            <div class="sec-label">Storage-level unification — when available at scale</div>
+            <div class="row">
+              <div class="node teal" style="flex:1;min-width:130px">
+                <div class="nl">Transactional</div>
+                <div class="nt">Lakebase (Postgres)</div>
+                <div class="ns">Writes directly to open formats</div>
+              </div>
+              <div class="node teal" style="flex:1;min-width:130px">
+                <div class="nl">Storage</div>
+                <div class="nt">Single copy · Delta + Iceberg</div>
+                <div class="ns">Unity Catalog governs everything</div>
+              </div>
+              <div class="node teal" style="flex:1;min-width:130px">
+                <div class="nl">Analytical</div>
+                <div class="nt">Lakehouse//RT</div>
+                <div class="ns">Sub-100ms · no serving-layer replicas</div>
+              </div>
+              <div class="node teal" style="flex:1;min-width:130px">
+                <div class="nl">Agents</div>
+                <div class="nt">Reason on the current commit</div>
+                <div class="ns">Git-style branching for safe experimentation</div>
+              </div>
+            </div>
+            <div class="dp-note ok">✓ The CDC seam disappears. The DTO operational layer is always current.</div>
+          </div>
+        </div>
+
+      </div>
+      <hr class="dp-divider">
+      <div class="dp-note warn">⚠ LTAP is "coming soon" as of June 2026. Do not block DTO work waiting for it. Build composable now; migrate when LTAP reaches GA and benchmarks validate the single-copy claim under your write load.</div>
+    </div>
+  </section>
+
+  <!-- ═══ VERDICT ═══ -->
+  <section id="verdict">
+    <div class="section-tag">The Verdict</div>
+    <h2>Four things that actually changed. One that did not.</h2>
+
+    <div class="dpanel">
+      <div class="dpanel-title">What storage-level unification changes for DTO builders</div>
+      <div class="verdict-grid">
+        <div class="verdict-card good">
+          <div class="verdict-label good">Changed ✓</div>
+          <div class="verdict-title">The pipeline is no longer inevitable</div>
+          <div class="verdict-body">For the first time there is a credible architecture where a transactional write IS the analytical record. The structural seam between OLTP and OLAP is no longer a law of physics — it is a choice.</div>
+        </div>
+        <div class="verdict-card good">
+          <div class="verdict-label good">Changed ✓</div>
+          <div class="verdict-title">Governance becomes a first-class citizen</div>
+          <div class="verdict-body">A single storage copy governed by one catalog means lineage, permissions, and quality rules apply once. The dual-catalog drift problem — where OLTP and OLAP metadata diverge — is eliminated by design.</div>
+        </div>
+        <div class="verdict-card good">
+          <div class="verdict-label good">Changed ✓</div>
+          <div class="verdict-title">Agents can reason on the current commit</div>
+          <div class="verdict-body">An AI agent grounded on unified storage reads business state as of the last write, not the last replication cycle. For DTOs driving autonomous decisions, this is the difference between a nervous system and a history book.</div>
+        </div>
+        <div class="verdict-card good">
+          <div class="verdict-label good">Changed ✓</div>
+          <div class="verdict-title">Real-time serving tier is optional</div>
+          <div class="verdict-body">Lakehouse//RT at sub-100ms on governed Delta/Iceberg tables removes the need for a Redis/Druid serving layer in most DTO query patterns. Fewer moving parts. Better cost profile.</div>
+        </div>
+        <div class="verdict-card warn full">
+          <div class="verdict-label warn">Did not change ⚠</div>
+          <div class="verdict-title">The hard part of a DTO is still the hard part</div>
+          <div class="verdict-body">Graph modelling. Business event schema design. Connecting operational data to the structural architecture maintained by Enterprise Architects. Defining wellness signals. Building the three-question capability stack — observability, impact traversal, intelligence. None of this is solved by storage-layer unification. LTAP gives the DTO a better foundation. It does not build the DTO for you. The engineering discipline described in Part 1 remains exactly as important.</div>
+        </div>
+      </div>
+    </div>
+
+    <p>The storage war is real, and for DTO builders it matters. But the most important architectural decisions — how you model business state, how you trace propagation, how you expose consequence queries to AI agents — are independent of whether the data pipeline between your transactional and analytical systems has zero milliseconds of lag or two seconds. <strong>Build the DTO correctly. Then let the storage layer catch up.</strong></p>
+  </section>
+
+  <div class="conclusion">
+    <p>LTAP does not make the DTO easier to conceive. It makes the DTO possible to trust — because the operational truth it reflects is finally current.</p>
+  </div>
+
+  <div class="series-cta">
+    <p>This is Part 2 of the Organisational Data Twin series</p>
+    <div class="cta-row">
+      <a mat-stroked-button routerLink="/dto-blog">
+        <mat-icon>arrow_back</mat-icon>
+        Part 1: The Organisational Data Twin
+      </a>
+      <a mat-flat-button href="https://tech.ganesh.ky/the-organisational-data-twin-c8ffd828b7ae" target="_blank" rel="noopener noreferrer">
+        <mat-icon>open_in_new</mat-icon>
+        Read on Medium
+      </a>
+    </div>
+  </div>
+
+  <p class="source-note">
+    Peerislands · Data Engineering Series ·
+    Sources: ClickHouse — Unifying OLTP and OLAP (2026) · Databricks LTAP Announcement, Data + AI Summit (June 16, 2026) ·
+    Gartner HTAP (2014) · VLDB HTAP Survey (2024) ·
+    <a href="https://tech.ganesh.ky/the-organisational-data-twin-c8ffd828b7ae" target="_blank" rel="noopener noreferrer">Original on Medium →</a>
+  </p>
+</app-article-layout>

@@ -31,6 +31,12 @@ export const BLOGS: BlogTile[] = [
     icon: 'schema',
     blurb: 'Building systems that reflect operational reality, not just its history.',
   },
+  {
+    path: '/dto-blog-part2',
+    title: 'The Storage War Underneath Your Data Twin',
+    icon: 'storage',
+    blurb: 'DTO Part 2 — how HTAP, zero-ETL and Databricks LTAP reshape the data pipeline seam.',
+  },
 ];
 
 export interface ProfileTile {
