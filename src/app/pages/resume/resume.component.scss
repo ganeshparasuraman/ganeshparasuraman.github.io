@@ -1,0 +1,225 @@
+.resume-wrap {
+  width: min(100%, 880px);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 4.5rem) 1.5rem;
+}
+
+// ── Header ────────────────────────────────────────────────────────
+.resume-header {
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  margin-bottom: 2.5rem;
+
+  .eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--mat-sys-primary);
+  }
+
+  h1 {
+    margin: 0 0 0.4rem;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+
+  .tagline {
+    margin: 0 0 1.5rem;
+    font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.contact-line {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.5rem;
+  margin: 0 0 1.75rem;
+  padding: 0;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    color: var(--mat-sys-primary);
+  }
+}
+
+.download-btn mat-icon {
+  margin-right: 0.4rem;
+}
+
+// ── Sections ──────────────────────────────────────────────────────
+.resume-section {
+  margin-bottom: 2.75rem;
+}
+
+.section-title {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.3rem, 3vw, 1.6rem);
+  letter-spacing: -0.02em;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--mat-sys-primary);
+  display: inline-block;
+}
+
+.bullet-list {
+  margin: 0;
+  padding-left: 1.3rem;
+
+  li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+  }
+}
+
+// ── Work experience timeline ──────────────────────────────────────
+.timeline {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.job-card {
+  border-radius: 16px;
+  padding: 1.4rem 1.5rem;
+  border-left: 4px solid var(--mat-sys-primary);
+}
+
+.job-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.job-title {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+
+.job-dates {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+}
+
+.job-company {
+  margin: 0.2rem 0 0.6rem;
+  font-weight: 600;
+  color: var(--mat-sys-primary);
+}
+
+// ── Prior history + education ─────────────────────────────────────
+.prior-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.prior-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.prior-title {
+  font-weight: 600;
+}
+
+.prior-meta {
+  font-size: 0.9rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// ── Certifications ────────────────────────────────────────────────
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.cert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.cert-icon {
+  flex-shrink: 0;
+  color: var(--mat-sys-primary);
+}
+
+.cert-name {
+  display: block;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.cert-meta {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.9rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// ── Skills ────────────────────────────────────────────────────────
+.skill-set {
+  --mdc-chip-label-text-size: 0.85rem;
+}
+
+// ── Technical skills ──────────────────────────────────────────────
+.tech-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.tech-item {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) 1fr;
+  gap: 0.5rem 1.25rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.tech-item:last-child {
+  border-bottom: none;
+}
+
+.tech-group {
+  font-weight: 600;
+  color: var(--mat-sys-primary);
+}
+
+.tech-items {
+  color: var(--mat-sys-on-surface);
+}
+
+@media (max-width: 600px) {
+  .tech-item {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
