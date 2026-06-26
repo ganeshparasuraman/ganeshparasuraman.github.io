@@ -46,6 +46,12 @@ export const routes: Routes = [
     title: 'The Storage War Underneath Your Data Twin — HTAP, LTAP & the DTO',
   },
   {
+    path: 'genai-flow',
+    loadComponent: () =>
+      import('./pages/genai-flow/genai-flow.component').then((m) => m.GenaiFlowComponent),
+    title: 'Understanding the GenAI Flow — Prompt Engineering to Agentic Workflows & MCP',
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent),

@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 
@@ -29,14 +28,20 @@ interface Certification {
   year: string;
 }
 
+interface TechItem {
+  name: string;
+  /** Full Devicon class (incl. "colored"); omitted → text-only badge. */
+  devicon?: string;
+}
+
 interface TechSkillGroup {
   group: string;
-  items: string;
+  items: TechItem[];
 }
 
 @Component({
   selector: 'app-resume',
-  imports: [MatCardModule, MatIconModule, MatButtonModule, MatChipsModule],
+  imports: [MatCardModule, MatButtonModule, MatChipsModule],
   templateUrl: './resume.component.html',
   styleUrl: './resume.component.scss',
 })
@@ -192,24 +197,99 @@ export class ResumeComponent {
   readonly techSkills: TechSkillGroup[] = [
     {
       group: 'Architecture & Platforms',
-      items: 'Digital & Data Architecture, Data Mesh, Microservices, Big Data, IoT, Cloud-Native Systems',
+      items: [
+        { name: 'Digital & Data Architecture' },
+        { name: 'Data Mesh' },
+        { name: 'Microservices' },
+        { name: 'Big Data' },
+        { name: 'IoT' },
+        { name: 'Cloud-Native Systems' },
+      ],
     },
     {
       group: 'Cloud & Data Stack',
-      items: 'AWS, Azure, GCP, Kubernetes, Databricks, Confluent Cloud, MongoDB Atlas',
+      items: [
+        { name: 'AWS', devicon: 'devicon-amazonwebservices-plain-wordmark colored' },
+        { name: 'Azure', devicon: 'devicon-azure-plain colored' },
+        { name: 'GCP', devicon: 'devicon-googlecloud-plain colored' },
+        { name: 'Kubernetes', devicon: 'devicon-kubernetes-plain colored' },
+        { name: 'Databricks' },
+        { name: 'Confluent Cloud' },
+        { name: 'MongoDB Atlas', devicon: 'devicon-mongodb-plain colored' },
+      ],
     },
-    { group: 'Programming Languages', items: 'Java, Scala, Kotlin, Go, Python, JavaScript' },
+    {
+      group: 'Programming Languages',
+      items: [
+        { name: 'Java', devicon: 'devicon-java-plain colored' },
+        { name: 'Scala', devicon: 'devicon-scala-plain colored' },
+        { name: 'Kotlin', devicon: 'devicon-kotlin-plain colored' },
+        { name: 'Go', devicon: 'devicon-go-original-wordmark colored' },
+        { name: 'Python', devicon: 'devicon-python-plain colored' },
+        { name: 'JavaScript', devicon: 'devicon-javascript-plain colored' },
+      ],
+    },
     {
       group: 'Frameworks & Tools',
-      items: 'Apache Spark, Apache Flink, Kafka, Spring EE, Airflow, Temporal, Polars, Flutter',
+      items: [
+        { name: 'Apache Spark', devicon: 'devicon-apachespark-original colored' },
+        { name: 'Apache Flink' },
+        { name: 'Kafka', devicon: 'devicon-apachekafka-original colored' },
+        { name: 'Spring EE', devicon: 'devicon-spring-plain colored' },
+        { name: 'Airflow', devicon: 'devicon-apacheairflow-plain colored' },
+        { name: 'Temporal' },
+        { name: 'Polars' },
+        { name: 'Flutter', devicon: 'devicon-flutter-plain colored' },
+      ],
     },
-    { group: 'Web & APIs', items: 'REST, GraphQL, gRPC, SOAP, JAX-RS, JAX-WS' },
-    { group: 'Databases', items: 'MySQL, PostgreSQL, MS SQL Server, Oracle, MongoDB' },
+    {
+      group: 'Web & APIs',
+      items: [
+        { name: 'REST' },
+        { name: 'GraphQL', devicon: 'devicon-graphql-plain colored' },
+        { name: 'gRPC' },
+        { name: 'SOAP' },
+        { name: 'JAX-RS' },
+        { name: 'JAX-WS' },
+      ],
+    },
+    {
+      group: 'Databases',
+      items: [
+        { name: 'MySQL', devicon: 'devicon-mysql-plain colored' },
+        { name: 'PostgreSQL', devicon: 'devicon-postgresql-plain colored' },
+        { name: 'MS SQL Server', devicon: 'devicon-microsoftsqlserver-plain colored' },
+        { name: 'Oracle', devicon: 'devicon-oracle-original colored' },
+        { name: 'MongoDB', devicon: 'devicon-mongodb-plain colored' },
+      ],
+    },
     {
       group: 'DevOps & Observability',
-      items: 'Docker, Helm, Jenkins, Git, Prometheus, Grafana',
+      items: [
+        { name: 'Docker', devicon: 'devicon-docker-plain colored' },
+        { name: 'Helm', devicon: 'devicon-helm-original colored' },
+        { name: 'Jenkins', devicon: 'devicon-jenkins-plain colored' },
+        { name: 'Git', devicon: 'devicon-git-plain colored' },
+        { name: 'Prometheus', devicon: 'devicon-prometheus-original colored' },
+        { name: 'Grafana', devicon: 'devicon-grafana-plain colored' },
+      ],
     },
-    { group: 'AI & GenAI', items: 'OpenAI APIs, LangChain, LlamaIndex, Copilot, Claude Code' },
-    { group: 'Agile & Delivery Tools', items: 'Jira, Azure DevOps' },
+    {
+      group: 'AI & GenAI',
+      items: [
+        { name: 'OpenAI APIs' },
+        { name: 'LangChain' },
+        { name: 'LlamaIndex' },
+        { name: 'Copilot' },
+        { name: 'Claude Code' },
+      ],
+    },
+    {
+      group: 'Agile & Delivery Tools',
+      items: [
+        { name: 'Jira', devicon: 'devicon-jira-plain colored' },
+        { name: 'Azure DevOps', devicon: 'devicon-azuredevops-plain colored' },
+      ],
+    },
   ];
 }

@@ -6,11 +6,14 @@
       <p class="subtitle">{{ subtitle }}</p>
     }
     @if (meta.length) {
-      <mat-chip-set aria-label="Article details">
-        @for (m of meta; track m) {
-          <mat-chip disableRipple>{{ m }}</mat-chip>
+      <div class="byline" aria-label="Article details">
+        @for (m of meta; track m; let last = $last) {
+          <span class="byline-item">{{ m }}</span>
+          @if (!last) {
+            <span class="byline-sep" aria-hidden="true">·</span>
+          }
         }
-      </mat-chip-set>
+      </div>
     }
   </div>
 </header>
@@ -25,9 +28,7 @@
     </nav>
   }
 
-  <mat-card class="article-card" appearance="outlined">
-    <mat-card-content class="article-body">
-      <ng-content />
-    </mat-card-content>
-  </mat-card>
+  <div class="article-body">
+    <ng-content />
+  </div>
 </div>

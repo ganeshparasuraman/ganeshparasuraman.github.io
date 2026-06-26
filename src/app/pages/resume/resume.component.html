@@ -7,15 +7,15 @@
 
     <ul class="contact-line">
       <li>
-        <mat-icon>place</mat-icon>
+        <i class="contact-icon fa-solid fa-location-dot" aria-hidden="true"></i>
         <span>Dallas, Texas</span>
       </li>
       <li>
-        <mat-icon>mail</mat-icon>
+        <i class="contact-icon fa-solid fa-envelope" aria-hidden="true"></i>
         <a href="mailto:ganesh.parasuraman@gmail.com">ganesh.parasuraman&#64;gmail.com</a>
       </li>
       <li>
-        <mat-icon>link</mat-icon>
+        <i class="contact-icon fa-solid fa-link" aria-hidden="true"></i>
         <a href="https://linkedin.com/in/ganeshparasuraman/" target="_blank" rel="noopener">
           linkedin.com/in/ganeshparasuraman
         </a>
@@ -29,7 +29,7 @@
       [href]="resumeUrl"
       download="Ganesh-Parasuraman-Resume.pdf"
     >
-      <mat-icon>download</mat-icon>
+      <i class="btn-icon fa-solid fa-download" aria-hidden="true"></i>
       Download PDF
     </a>
   </header>
@@ -97,7 +97,7 @@
     <div class="cert-grid">
       @for (cert of certifications; track cert.name) {
         <div class="cert-item">
-          <mat-icon class="cert-icon">verified</mat-icon>
+          <i class="cert-icon fa-solid fa-circle-check" aria-hidden="true"></i>
           <div>
             <span class="cert-name">{{ cert.name }}</span>
             <span class="cert-meta">{{ cert.issuer }} &middot; {{ cert.year }}</span>
@@ -124,7 +124,16 @@
       @for (group of techSkills; track group.group) {
         <div class="tech-item">
           <span class="tech-group">{{ group.group }}</span>
-          <span class="tech-items">{{ group.items }}</span>
+          <div class="tech-badges">
+            @for (item of group.items; track item.name) {
+              <span class="tech-badge">
+                @if (item.devicon) {
+                  <i class="{{ item.devicon }}" aria-hidden="true"></i>
+                }
+                {{ item.name }}
+              </span>
+            }
+          </div>
         </div>
       }
     </div>

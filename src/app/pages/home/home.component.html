@@ -1,9 +1,8 @@
 <section class="home-hero">
   <div class="home-inner">
-    <h1>Engineering &amp; Data Platform Notes</h1>
+    <h1>Engineering &amp; Technology Notes</h1>
     <p class="lede">
-      Writing by Ganesh Parasuraman on metadata-driven data platforms, healthcare
-      data engineering, and AI-native architecture.
+      Writing by Ganesh Parasuraman on software engineering, data platforms, AI systems, cloud architecture, and emerging technology.
     </p>
   </div>
 </section>
@@ -12,10 +11,17 @@
   <section class="tile-grid profiles" aria-label="Profile links">
     @for (p of profiles; track p.path) {
       <a [routerLink]="p.path" class="tile-link">
-        <mat-card appearance="outlined" class="tile profile-tile">
-          <mat-icon class="tile-icon">{{ p.icon }}</mat-icon>
-          <span class="tile-title">{{ p.title }}</span>
-        </mat-card>
+        <article class="blog-card">
+          <div class="card-media" [style.background]="p.gradient">
+            <i class="card-icon {{ p.faIcon }}" aria-hidden="true"></i>
+          </div>
+          <div class="card-body">
+            <span class="card-category">{{ p.category }}</span>
+            <h3 class="card-title">{{ p.title }}</h3>
+            <p class="card-blurb">{{ p.blurb }}</p>
+            <span class="card-meta">{{ p.cta }}</span>
+          </div>
+        </article>
       </a>
     }
   </section>
@@ -25,11 +31,17 @@
   <section class="tile-grid blogs" aria-label="Blog links">
     @for (blog of blogs; track blog.path) {
       <a [routerLink]="blog.path" class="tile-link">
-        <mat-card appearance="outlined" class="tile blog-tile">
-          <mat-icon class="tile-icon">{{ blog.icon }}</mat-icon>
-          <span class="tile-title">{{ blog.title }}</span>
-          <span class="tile-blurb">{{ blog.blurb }}</span>
-        </mat-card>
+        <article class="blog-card">
+          <div class="card-media" [style.background]="blog.gradient">
+            <i class="card-icon {{ blog.faIcon }}" aria-hidden="true"></i>
+          </div>
+          <div class="card-body">
+            <span class="card-category">{{ blog.category }}</span>
+            <h3 class="card-title">{{ blog.title }}</h3>
+            <p class="card-blurb">{{ blog.blurb }}</p>
+            <span class="card-meta">{{ blog.readTime }}</span>
+          </div>
+        </article>
       </a>
     }
   </section>

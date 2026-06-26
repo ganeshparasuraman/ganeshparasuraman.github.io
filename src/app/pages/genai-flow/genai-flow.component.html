@@ -1,0 +1,796 @@
+<app-article-layout
+  eyebrow="GenAI · Agents · MCP"
+  heading="Understanding the GenAI Flow: From Prompt Engineering to Agentic Workflows and MCP"
+  subtitle="From a simple prompt to a full agentic workflow — explained end to end with one running use case: generating a tailored resume and cover letter."
+  [meta]="['Peerislands', '12 min read', 'June 2026']"
+  [toc]="toc"
+>
+  <div class="callout">
+    <strong>Running use case throughout this blog:</strong> Imagine you are a job seeker. You have a
+    job description for a <em>Senior Data Engineer</em> role and your existing work history. You want
+    AI to generate a tailored <strong>resume</strong> and a compelling <strong>cover letter</strong>
+    automatically. We use this real-world scenario to illustrate every concept — from a simple prompt
+    to a full agentic workflow.
+  </div>
+
+  <p class="lead">
+    Generative AI applications are evolving very fast. In the beginning, most people used GenAI by
+    typing a prompt into ChatGPT and reading the response. Today, we are building AI applications that
+    can reason, call tools, interact with APIs, search enterprise data, and complete multi-step
+    workflows.
+  </p>
+
+  <p>This blog explains the basic GenAI flow in a simple way:</p>
+
+  <blockquote>
+    Prompt Engineering → Agentic App → MCP Server → Agent + Tool Interaction → Agentic Workflow App
+  </blockquote>
+
+  <p>
+    We will also understand important reasoning patterns like <strong>CoT</strong>,
+    <strong>ReAct</strong>, and <strong>ToT</strong>, with small Python examples.
+  </p>
+
+  <!-- ═══ PROMPT ENGINEERING ═══ -->
+  <section id="prompt">
+    <div class="section-tag">Step 1</div>
+    <h2>1. Prompt Engineering</h2>
+    <p>Prompt engineering is the starting point of most GenAI applications.</p>
+    <p>A prompt is the instruction we give to the LLM. A better prompt usually gives a better answer.</p>
+
+    <p>A weak prompt:</p>
+    <pre><code>Write me a resume.</code></pre>
+
+    <p>A better prompt:</p>
+    <pre><code>You are a professional resume writer.
+Given the job description below and the candidate's work history,
+write a one-page resume in reverse chronological order.
+Highlight skills that directly match the job requirements.
+Use strong action verbs. Avoid fluff. Format as plain text.
+
+Job Description:
+&#123;job_description&#125;
+
+Candidate Work History:
+&#123;work_history&#125;</code></pre>
+
+    <p>A good prompt usually contains:</p>
+    <pre><code>Role       → Who should the AI act as?
+Task       → What should the AI do?
+Context    → What information should it use?
+Format     → How should the answer be structured?
+Constraint → What should it avoid or limit?</code></pre>
+
+    <h3>Resume + Cover Letter Example</h3>
+    <pre><code>You are a professional career coach and resume writer.
+Your task is to write a tailored resume AND a cover letter for the candidate below.
+
+Job Description:
+Senior Data Engineer at TechCorp
+- 5+ years Apache Spark experience
+- Strong Python and SQL skills
+- Experience with Delta Lake or Iceberg
+- Cloud experience: AWS or Azure
+
+Candidate Work History:
+- 6 years as a Data Engineer at DataCo
+- Built Spark pipelines processing 10TB/day
+- Proficient in Python, SQL, PySpark
+- AWS Certified Solutions Architect
+
+Output:
+1. Resume (reverse chronological, one page, plain text)
+2. Cover Letter (3 paragraphs: hook, fit, call to action)</code></pre>
+
+    <p>In simple terms, prompt engineering is about converting a vague question into a clear instruction.</p>
+  </section>
+
+  <!-- ═══ SIMPLE APP ═══ -->
+  <section id="simple">
+    <div class="section-tag">Step 2</div>
+    <h2>2. Simple GenAI Application Flow</h2>
+    <p>A basic GenAI app looks like this:</p>
+
+    <pre class="ascii-diagram">User Input
+   ↓
+Prompt Template
+   ↓
+LLM
+   ↓
+Response
+   ↓
+User</pre>
+
+    <h3>Resume Use Case — Basic App</h3>
+    <pre><code>def build_resume_prompt(job_description, work_history):
+    return f"""
+    You are a professional resume writer.
+    Write a tailored, one-page resume based on the job description and work history below.
+
+    Job Description:
+    &#123;job_description&#125;
+
+    Work History:
+    &#123;work_history&#125;
+
+    Format:
+    - Name and contact at top
+    - Summary (2 sentences)
+    - Skills section matching the job
+    - Experience in reverse chronological order
+    - Education
+    """
+
+def call_llm(prompt):
+    # In real applications, this calls OpenAI, Anthropic, Gemini, etc.
+    return "LLM-generated resume content for the given input."
+
+job_description = "Senior Data Engineer – Spark, Python, Delta Lake, AWS"
+work_history = "6 years at DataCo, built Spark pipelines, Python, PySpark, AWS Certified"
+
+prompt = build_resume_prompt(job_description, work_history)
+resume = call_llm(prompt)
+
+print(resume)</code></pre>
+
+    <p>This is useful, but limited.</p>
+    <p>
+      The LLM only responds based on the prompt. It does not automatically know your LinkedIn profile,
+      your saved job descriptions, your existing resume file, or the company's tone-of-voice
+      preferences. That is where agentic applications come in.
+    </p>
+  </section>
+
+  <!-- ═══ AGENTIC APP ═══ -->
+  <section id="agentic">
+    <div class="section-tag">Step 3</div>
+    <h2>3. What Is an Agentic App?</h2>
+    <p>
+      An agentic app is a GenAI application where the LLM does not just answer. It can also decide what
+      action to take.
+    </p>
+    <p>For the resume use case, instead of only generating text:</p>
+    <pre><code>An agentic resume builder can:
+1. Fetch the job description from a URL.
+2. Read the candidate's existing resume from a file.
+3. Fetch the company's LinkedIn page to learn their tone.
+4. Generate a tailored resume and cover letter.
+5. Save both as formatted Word documents.
+6. Email the documents to the candidate.</code></pre>
+
+    <p>The flow looks like this:</p>
+    <pre class="ascii-diagram">User Goal
+   ↓
+Agent
+   ↓
+Reasoning
+   ↓
+Tool Selection
+   ↓
+Tool Execution
+   ↓
+Observation
+   ↓
+Final Answer or Next Action</pre>
+
+    <p>An agent usually has access to tools such as:</p>
+    <pre><code>File read/write tool
+Web scrape tool
+Email tool
+Document formatter tool
+Vector search tool (search past resumes)
+MCP server tool</code></pre>
+
+    <h3>Resume Agent — Simple Python Example</h3>
+    <pre><code>def fetch_job_description(url):
+    return "Senior Data Engineer – Spark, Python, Delta Lake, AWS (fetched from URL)"
+
+def read_candidate_profile(file_path):
+    return "6 years at DataCo, Spark pipelines, Python, AWS Certified (read from file)"
+
+def save_document(content, file_name):
+    return f"Saved &#123;file_name&#125; successfully."
+
+tools = &#123;
+    "fetch_job_description": fetch_job_description,
+    "read_candidate_profile": read_candidate_profile,
+    "save_document": save_document
+&#125;
+
+def resume_agent(user_request):
+    job_desc = tools["fetch_job_description"]("https://techcorp.com/jobs/senior-de")
+    profile   = tools["read_candidate_profile"]("/data/candidate_profile.txt")
+
+    resume_content = f"Tailored resume for: &#123;job_desc&#125; | Based on: &#123;profile&#125;"
+    cover_content  = f"Cover letter for: &#123;job_desc&#125;"
+
+    tools["save_document"](resume_content, "resume.docx")
+    tools["save_document"](cover_content,  "cover_letter.docx")
+
+    return "Resume and cover letter generated and saved."
+
+print(resume_agent("Create resume and cover letter for the TechCorp job"))</code></pre>
+  </section>
+
+  <!-- ═══ WHY TOOLS ═══ -->
+  <section id="tools">
+    <div class="section-tag">Why Tools</div>
+    <h2>4. Why Do Agents Need Tools?</h2>
+    <p>LLMs are powerful, but they have limitations.</p>
+    <p>For the resume use case, they may not know:</p>
+    <pre><code>The candidate's most recent job details (stored in a private file)
+The company's culture (on their website)
+The current version of the candidate's resume (stored locally)
+The correct Word document format for a professional resume
+Whether a similar resume was already generated before</code></pre>
+
+    <p>So we connect the LLM to tools:</p>
+    <pre><code>LLM + File Tool       → Can read existing resumes and save new ones
+LLM + Web Scrape Tool → Can fetch live job descriptions
+LLM + Vector DB Tool  → Can find past resumes for reference
+LLM + Email Tool      → Can send the final documents
+LLM + MCP Server      → Can access all of the above in a standard way</code></pre>
+  </section>
+
+  <!-- ═══ MCP ═══ -->
+  <section id="mcp">
+    <div class="section-tag">Step 4</div>
+    <h2>5. What Is an MCP Server?</h2>
+    <p>MCP stands for <strong>Model Context Protocol</strong>.</p>
+    <p>
+      In simple terms, MCP is a standard way for AI applications and agents to connect with tools,
+      systems, and data sources.
+    </p>
+    <p>
+      Without MCP, every integration is custom-built. With MCP, tools are exposed in a standard,
+      reusable way.
+    </p>
+
+    <h3>Resume Use Case — MCP Flow</h3>
+    <pre class="ascii-diagram">User asks:
+"Generate a resume for the TechCorp Senior Data Engineer role."
+
+Agent decides:
+"I need the job description and the candidate's profile."
+
+Agent calls MCP Server:
+get_job_description(url="https://techcorp.com/jobs/senior-de")
+get_candidate_profile(candidate_id="john_doe")
+
+MCP Server fetches:
+Job description from web + candidate profile from internal DB
+
+Agent generates:
+Resume and cover letter
+
+Agent calls MCP Server:
+save_document(content=resume, format="docx", name="resume_techcorp.docx")
+send_email(to="john&#64;example.com", attachments=["resume.docx", "cover_letter.docx"])</pre>
+
+    <h3>Python-style MCP Example</h3>
+    <pre><code>class ResumeMCPServer:
+    def get_job_description(self, url):
+        return &#123;
+            "title": "Senior Data Engineer",
+            "company": "TechCorp",
+            "skills": ["Apache Spark", "Python", "Delta Lake", "AWS"],
+            "experience_years": 5
+        &#125;
+
+    def get_candidate_profile(self, candidate_id):
+        return &#123;
+            "name": "John Doe",
+            "experience_years": 6,
+            "skills": ["PySpark", "Python", "SQL", "AWS"],
+            "certifications": ["AWS Certified Solutions Architect"]
+        &#125;
+
+    def save_document(self, content, file_name):
+        return &#123;"saved": True, "path": f"/output/&#123;file_name&#125;"&#125;
+
+    def send_email(self, to, subject, attachments):
+        return &#123;"sent": True, "to": to&#125;</code></pre>
+  </section>
+
+  <!-- ═══ INTERACTION ═══ -->
+  <section id="interaction">
+    <div class="section-tag">Step 5</div>
+    <h2>6. How Agents and MCP Interact</h2>
+    <p>Agent = Planner + Reasoner + Decision Maker<br />
+    MCP Server = Tool Provider + System Connector</p>
+
+    <h3>Full Resume Interaction</h3>
+    <pre class="ascii-diagram">User:
+"Create a resume and cover letter for the TechCorp Data Engineer job."
+
+Agent:
+I need the job description and candidate profile.
+
+MCP Client:
+Calls get_job_description() and get_candidate_profile()
+
+MCP Server:
+Returns job details and candidate data
+
+Agent:
+Generates tailored resume and cover letter content
+
+MCP Client:
+Calls save_document() for both files
+
+Agent Summary:
+"Your resume and cover letter for TechCorp are ready and saved."</pre>
+
+    <pre><code>class ResumeAgent:
+    def __init__(self, mcp_server):
+        self.mcp = mcp_server
+
+    def handle_request(self, user_request):
+        job  = self.mcp.get_job_description("https://techcorp.com/jobs/senior-de")
+        prof = self.mcp.get_candidate_profile("john_doe")
+
+        # Match skills
+        matched = [s for s in prof["skills"] if s in job["skills"] or "Spark" in s]
+
+        resume_content = f"""
+        Name: &#123;prof['name']&#125;
+        Target Role: &#123;job['title']&#125; at &#123;job['company']&#125;
+        Matched Skills: &#123;', '.join(matched)&#125;
+        Experience: &#123;prof['experience_years']&#125; years
+        Certifications: &#123;', '.join(prof['certifications'])&#125;
+        """
+
+        cover_content = f"""
+        Dear Hiring Manager,
+        I am excited to apply for the &#123;job['title']&#125; role at &#123;job['company']&#125;.
+        With &#123;prof['experience_years']&#125; years of hands-on experience in &#123;', '.join(matched)&#125;,
+        I am confident I can deliver immediate value to your team.
+        I look forward to discussing this opportunity further.
+        """
+
+        self.mcp.save_document(resume_content, "resume_techcorp.docx")
+        self.mcp.save_document(cover_content,  "cover_letter_techcorp.docx")
+
+        return "Resume and cover letter created and saved successfully."
+
+mcp    = ResumeMCPServer()
+agent  = ResumeAgent(mcp)
+print(agent.handle_request("Create resume for TechCorp"))</code></pre>
+  </section>
+
+  <!-- ═══ WORKFLOW ═══ -->
+  <section id="workflow">
+    <div class="section-tag">Step 6</div>
+    <h2>7. Agentic Workflow App</h2>
+    <p>An agentic workflow app is more structured than a simple agent.</p>
+    <p>
+      Instead of the agent deciding every step on the fly, the workflow defines a clear, repeatable
+      process — ideal for production use.
+    </p>
+
+    <h3>Resume Workflow</h3>
+    <pre class="ascii-diagram">User Request:
+"Create a resume and cover letter for TechCorp Senior Data Engineer."
+
+Workflow:
+
+Step 1  → Fetch job description (from URL or uploaded file)
+Step 2  → Load candidate profile (from DB or uploaded resume)
+Step 3  → Skill gap analysis (match candidate skills to job requirements)
+Step 4  → Generate tailored resume
+Step 5  → Generate tailored cover letter
+Step 6  → Format both as Word (.docx) documents
+Step 7  → Quality check (length, tone, keyword match score)
+Step 8  → Save to output folder
+Step 9  → Notify candidate via email</pre>
+
+    <h3>Python Workflow Example</h3>
+    <pre><code>def fetch_job_description(url):
+    return &#123;"title": "Senior Data Engineer", "company": "TechCorp",
+            "skills": ["Spark", "Python", "Delta Lake", "AWS"]&#125;
+
+def load_candidate_profile(candidate_id):
+    return &#123;"name": "John Doe", "experience_years": 6,
+            "skills": ["PySpark", "Python", "SQL", "AWS"],
+            "certs": ["AWS Certified Solutions Architect"]&#125;
+
+def skill_gap_analysis(job, profile):
+    matched = [s for s in profile["skills"] if s in job["skills"] or "Spark" in s]
+    missing = [s for s in job["skills"] if s not in profile["skills"] and "Spark" not in s]
+    return &#123;"matched": matched, "missing": missing&#125;
+
+def generate_resume(job, profile, skill_analysis):
+    return f"[Resume] &#123;profile['name']&#125; | &#123;job['title']&#125; at &#123;job['company']&#125; | Skills: &#123;skill_analysis['matched']&#125;"
+
+def generate_cover_letter(job, profile):
+    return f"[Cover Letter] Applying to &#123;job['title']&#125; at &#123;job['company']&#125; - &#123;profile['name']&#125;"
+
+def quality_check(resume, cover_letter):
+    # Simulate keyword match check
+    return &#123;"score": 88, "passed": True, "notes": "Good keyword coverage"&#125;
+
+def save_documents(resume, cover_letter):
+    return &#123;"resume": "resume_techcorp.docx", "cover": "cover_techcorp.docx", "saved": True&#125;
+
+def notify_candidate(email, files):
+    return f"Email sent to &#123;email&#125; with &#123;files&#125;"
+
+def run_resume_workflow(job_url, candidate_id, candidate_email):
+    job     = fetch_job_description(job_url)
+    profile = load_candidate_profile(candidate_id)
+    skills  = skill_gap_analysis(job, profile)
+
+    if len(skills["matched"]) == 0:
+        return "No skill match found. Resume not generated."
+
+    resume       = generate_resume(job, profile, skills)
+    cover_letter = generate_cover_letter(job, profile)
+    quality      = quality_check(resume, cover_letter)
+
+    if not quality["passed"]:
+        return f"Quality check failed: &#123;quality['notes']&#125;"
+
+    files  = save_documents(resume, cover_letter)
+    notify = notify_candidate(candidate_email, files)
+
+    return &#123;
+        "status":   "Workflow completed successfully",
+        "resume":   files["resume"],
+        "cover":    files["cover"],
+        "quality":  quality,
+        "skills":   skills,
+        "email":    notify
+    &#125;
+
+result = run_resume_workflow(
+    "https://techcorp.com/jobs/senior-de",
+    "john_doe",
+    "john&#64;example.com"
+)
+print(result)</code></pre>
+
+    <h3>Framework options for production agentic workflows</h3>
+    <table>
+      <thead>
+        <tr><th>Framework</th><th>Best For</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>LangGraph</strong></td><td>Graph-based stateful agent flows with branching</td></tr>
+        <tr><td><strong>CrewAI</strong></td><td>Multi-agent collaboration (e.g., Resume Writer + Reviewer agents)</td></tr>
+        <tr><td><strong>Semantic Kernel</strong></td><td>Enterprise .NET/Python orchestration</td></tr>
+        <tr><td><strong>Temporal</strong></td><td>Durable, fault-tolerant long-running workflows</td></tr>
+        <tr><td><strong>Airflow</strong></td><td>DAG-based pipeline orchestration</td></tr>
+        <tr><td><strong>Dagster</strong></td><td>Data-aware orchestration with observability</td></tr>
+        <tr><td><strong>AutoGen</strong></td><td>Multi-agent conversation and task delegation</td></tr>
+        <tr><td><strong>LlamaIndex Workflows</strong></td><td>Event-driven RAG + agentic pipelines</td></tr>
+        <tr><td><strong>Prefect</strong></td><td>Lightweight Python-native orchestration</td></tr>
+        <tr><td><strong>Haystack</strong></td><td>Pipeline-first RAG + agentic flows</td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      For the resume use case, <strong>CrewAI</strong> is particularly interesting: you could define a
+      <code>ResumeWriterAgent</code>, a <code>CoverLetterAgent</code>, and a
+      <code>QualityReviewerAgent</code> — each with its own role, tools, and goal — working together to
+      produce the final output.
+    </p>
+  </section>
+
+  <!-- ═══ REASONING PATTERNS ═══ -->
+  <section id="reasoning">
+    <div class="section-tag">Reasoning Patterns</div>
+    <h2>8. CoT: Chain of Thought</h2>
+    <p>
+      CoT means <strong>Chain of Thought</strong> — solving a problem step by step, making the
+      reasoning visible and verifiable.
+    </p>
+
+    <h3>Resume Use Case — CoT</h3>
+    <pre class="ascii-diagram">Question:
+The job requires 5+ years of Spark experience.
+The candidate has 6 years total, with 4 years focused on Spark.
+Is the candidate a strong match for the experience requirement?
+
+Step-by-step:
+Required Spark experience = 5+ years
+Candidate's total experience = 6 years
+Candidate's Spark-specific experience = 4 years
+
+4 years &lt; 5 years required → Not a full match on Spark alone.
+However, 6 total years shows strong engineering maturity.
+Candidate also has AWS cert which is listed as a bonus requirement.
+
+Conclusion:
+Partial match. Highlight total experience and AWS cert in resume.
+Acknowledge Spark gap briefly; emphasize adjacent Spark-related work.</pre>
+
+    <h3>Python-style CoT for skill matching</h3>
+    <pre><code>def cot_skill_match(job_requirements, candidate_skills):
+    steps = []
+    matched = []
+    gaps    = []
+
+    steps.append(f"Required skills: &#123;job_requirements&#125;")
+    steps.append(f"Candidate skills: &#123;candidate_skills&#125;")
+
+    for skill in job_requirements:
+        if skill in candidate_skills:
+            matched.append(skill)
+            steps.append(f"  ✓ &#123;skill&#125; — match found")
+        else:
+            gaps.append(skill)
+            steps.append(f"  ✗ &#123;skill&#125; — gap identified")
+
+    match_pct = round(len(matched) / len(job_requirements) * 100)
+    steps.append(f"Match score: &#123;match_pct&#125;%")
+
+    conclusion = "Strong match" if match_pct &gt;= 75 else "Partial match — tailor resume carefully"
+    steps.append(f"Conclusion: &#123;conclusion&#125;")
+
+    return "\n".join(steps)
+
+print(cot_skill_match(
+    ["Spark", "Python", "Delta Lake", "AWS"],
+    ["PySpark", "Python", "SQL", "AWS"]
+))</code></pre>
+
+    <h2>9. ReAct: Reason + Act</h2>
+    <p>
+      ReAct means <strong>Reasoning + Acting</strong>. The agent loops through: Thought → Action →
+      Observation → Thought → …
+    </p>
+
+    <h3>Resume Use Case — ReAct Loop</h3>
+    <pre class="ascii-diagram">User:
+"Create a resume for TechCorp's Senior Data Engineer role."
+
+Thought:
+I need the job description. Let me fetch it.
+
+Action:
+fetch_job_description("https://techcorp.com/jobs/senior-de")
+
+Observation:
+Requirements: Spark 5+ yrs, Python, Delta Lake, AWS
+
+Thought:
+Now I need the candidate profile.
+
+Action:
+load_candidate_profile("john_doe")
+
+Observation:
+6 years experience, PySpark, Python, SQL, AWS Certified
+
+Thought:
+Good match. Delta Lake is missing — I should mention Iceberg as adjacent experience.
+Now generate the resume.
+
+Action:
+generate_resume(job, profile, skill_analysis)
+
+Observation:
+Resume draft created. Length: 480 words (fits one page).
+
+Thought:
+Now generate the cover letter.
+
+Action:
+generate_cover_letter(job, profile)
+
+Observation:
+Cover letter created. 3 paragraphs. Tone is professional.
+
+Final Answer:
+Resume and cover letter are ready. Delta Lake gap noted and mitigated with Iceberg experience.</pre>
+
+    <pre><code>def react_resume_agent(job_url, candidate_id):
+    steps = []
+
+    steps.append("Thought: I need to fetch the job description first.")
+    job = &#123;"title": "Senior Data Engineer", "skills": ["Spark", "Python", "Delta Lake", "AWS"]&#125;
+    steps.append(f"Action: fetch_job_description('&#123;job_url&#125;')")
+    steps.append(f"Observation: &#123;job&#125;")
+
+    steps.append("Thought: Now I need the candidate profile.")
+    profile = &#123;"name": "John Doe", "skills": ["PySpark", "Python", "SQL", "AWS"], "experience_years": 6&#125;
+    steps.append(f"Action: load_candidate_profile('&#123;candidate_id&#125;')")
+    steps.append(f"Observation: &#123;profile&#125;")
+
+    gaps = [s for s in job["skills"] if s not in profile["skills"] and "Spark" not in s]
+    if gaps:
+        steps.append(f"Thought: Skill gaps found: &#123;gaps&#125;. I will address these in the resume narrative.")
+
+    steps.append("Thought: Generating resume.")
+    resume = f"[Resume for &#123;profile['name']&#125; targeting &#123;job['title']&#125;]"
+    steps.append(f"Action: generate_resume(...)")
+    steps.append(f"Observation: &#123;resume&#125;")
+
+    steps.append("Thought: Generating cover letter.")
+    cover = f"[Cover Letter for &#123;job['title']&#125;]"
+    steps.append(f"Action: generate_cover_letter(...)")
+    steps.append(f"Observation: &#123;cover&#125;")
+
+    final = f"Resume and cover letter ready. Addressed skill gaps: &#123;gaps if gaps else 'None'&#125;"
+    return "\n".join(steps) + f"\nFinal Answer: &#123;final&#125;"
+
+print(react_resume_agent("https://techcorp.com/jobs/senior-de", "john_doe"))</code></pre>
+
+    <h2>10. ToT: Tree of Thought</h2>
+    <p>
+      ToT means <strong>Tree of Thought</strong>. Instead of one reasoning path, the model explores
+      multiple paths and picks the best.
+    </p>
+
+    <h3>Resume Use Case — ToT for Cover Letter Strategy</h3>
+    <pre class="ascii-diagram">Problem:
+How should John frame his cover letter given the Delta Lake skill gap?
+
+Path 1: Be transparent about the gap, emphasize learning agility
+Path 2: Lead with matching strengths, mention Iceberg as adjacent experience
+Path 3: Focus entirely on business impact achieved with Spark
+Path 4: Open with the AWS certification as a differentiator
+Path 5: Mention Delta Lake appeared in personal projects</pre>
+
+    <pre><code>def evaluate_cover_letter_strategy(strategy):
+    scores = &#123;
+        "transparent_gap":        6,   # Honest but may raise concern early
+        "lead_with_iceberg":      9,   # Positive framing, relevant bridge
+        "business_impact_focus":  8,   # Strong but doesn't address gap
+        "aws_differentiator":     7,   # Relevant but off the main concern
+        "personal_projects":      5    # Weak without production experience
+    &#125;
+    return scores.get(strategy, 0)
+
+def tot_cover_letter_strategy():
+    strategies = [
+        "transparent_gap",
+        "lead_with_iceberg",
+        "business_impact_focus",
+        "aws_differentiator",
+        "personal_projects"
+    ]
+
+    evaluated = [(s, evaluate_cover_letter_strategy(s)) for s in strategies]
+    best = max(evaluated, key=lambda x: x[1])
+
+    return &#123;
+        "all_strategies": evaluated,
+        "recommended": best,
+        "rationale": f"'&#123;best[0]&#125;' scores highest (&#123;best[1]&#125;/10). Framing Iceberg as an adjacent skill bridges the Delta Lake gap positively."
+    &#125;
+
+result = tot_cover_letter_strategy()
+print(result)</code></pre>
+
+    <h2>11. How CoT, ReAct, and ToT Differ</h2>
+    <table>
+      <thead>
+        <tr><th>Pattern</th><th>Meaning</th><th>Resume Use Case</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>CoT</strong></td><td>Think step by step</td><td>Skill gap analysis, match scoring</td></tr>
+        <tr><td><strong>ReAct</strong></td><td>Think, use a tool, observe, continue</td><td>Fetching job description → generating resume → saving files</td></tr>
+        <tr><td><strong>ToT</strong></td><td>Explore multiple paths, pick the best</td><td>Deciding the best cover letter framing strategy</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══ END TO END ═══ -->
+  <section id="end-to-end">
+    <div class="section-tag">Putting It Together</div>
+    <h2>12. End-to-End GenAI Flow — Resume Use Case</h2>
+    <p>A full resume + cover letter generation system:</p>
+
+    <pre class="ascii-diagram">User Request:
+"Create a resume and cover letter for TechCorp Senior Data Engineer."
+   ↓
+Prompt Engineering
+(Structured template with role, task, context, format, constraint)
+   ↓
+Agent
+   ↓
+Reasoning (ReAct loop)
+   ├── Thought: Fetch job description
+   ├── Thought: Load candidate profile
+   ├── Thought: Run CoT skill gap analysis
+   └── Thought: Use ToT to choose cover letter framing
+   ↓
+MCP Client
+   ↓
+MCP Server
+   ├── get_job_description()
+   ├── get_candidate_profile()
+   ├── save_document(resume.docx)
+   ├── save_document(cover_letter.docx)
+   └── send_email()
+   ↓
+Agentic Workflow
+   ├── Step 1: Fetch job
+   ├── Step 2: Load profile
+   ├── Step 3: Skill analysis
+   ├── Step 4: Generate resume
+   ├── Step 5: Generate cover letter
+   ├── Step 6: Format as .docx
+   ├── Step 7: Quality check
+   ├── Step 8: Save
+   └── Step 9: Email to candidate
+   ↓
+Final Output:
+resume_techcorp.docx + cover_letter_techcorp.docx → Emailed to candidate</pre>
+  </section>
+
+  <!-- ═══ TYPES ═══ -->
+  <section id="types">
+    <div class="section-tag">Clearing It Up</div>
+    <h2>13. Difference Between Chatbot, Agent, and Workflow</h2>
+    <table>
+      <thead>
+        <tr><th>Type</th><th>What It Does</th><th>Resume Example</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Chatbot</strong></td><td>Answers questions</td><td>"What should I put in a resume summary?"</td></tr>
+        <tr><td><strong>Agent</strong></td><td>Decides and uses tools</td><td>"Fetch the job, load my profile, and write a resume"</td></tr>
+        <tr><td><strong>Workflow App</strong></td><td>Executes a controlled process</td><td>Fetch → Analyze → Generate → Format → Quality Check → Save → Email</td></tr>
+      </tbody>
+    </table>
+
+    <p>A chatbot is conversational.<br />
+    An agent is action-oriented.<br />
+    An agentic workflow is process-oriented.</p>
+  </section>
+
+  <!-- ═══ WHY ═══ -->
+  <section id="why">
+    <div class="section-tag">The Point</div>
+    <h2>14. Why This Matters</h2>
+    <p>A useful GenAI system in the real world should:</p>
+    <pre><code>Understand user intent          → Parse "write me a resume for this job"
+Read enterprise/personal data   → Candidate profile, past resumes
+Call tools safely               → Fetch, generate, save, email
+Use reasoning patterns          → CoT for analysis, ReAct for tool use, ToT for decisions
+Follow workflows                → Reliable, repeatable, quality-checked
+Explain results                 → "Here is your resume. Delta Lake gap was addressed via Iceberg."</code></pre>
+
+    <p>
+      The resume and cover letter use case is simple to understand but requires the full stack: prompt
+      engineering, tool use, MCP integration, reasoning patterns, and workflow orchestration — which is
+      exactly what modern GenAI apps demand.
+    </p>
+  </section>
+
+  <!-- ═══ FINAL ═══ -->
+  <section id="final">
+    <div class="section-tag">Final Thought</div>
+    <h2>15. Final Thought</h2>
+    <p><strong>Prompt Engineering</strong> helps the AI understand exactly what to write and how.</p>
+    <p>
+      <strong>Agents</strong> help the AI fetch job descriptions, load profiles, and generate documents
+      without being told every step.
+    </p>
+    <p>
+      <strong>MCP</strong> helps the AI connect to file systems, databases, and email services in a
+      clean, standard way.
+    </p>
+    <p>
+      <strong>Agentic Workflows</strong> make the resume generation process reliable, quality-checked,
+      and production-ready.
+    </p>
+
+    <p>In simple words:</p>
+    <pre><code>Without prompt engineering → vague, generic resume.
+Without an agent           → no access to the job description or your profile.
+Without MCP                → no way to save or send the documents.
+Without a workflow         → no quality check, no retry, no reliability.</code></pre>
+  </section>
+
+  <div class="conclusion">
+    <p>
+      The future of GenAI is not just about asking better questions. It is about building AI systems
+      that can <strong>reason, connect, act, and deliver</strong> — whether the task is generating a
+      resume or running an enterprise data pipeline.
+    </p>
+  </div>
+
+  <p class="source-note">Peerislands · GenAI Series · June 2026</p>
+</app-article-layout>

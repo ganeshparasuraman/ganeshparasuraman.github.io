@@ -1,8 +1,5 @@
 import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
 
 export interface TocItem {
   id: string;
@@ -16,7 +13,7 @@ export interface TocItem {
  */
 @Component({
   selector: 'app-article-layout',
-  imports: [RouterLink, MatCardModule, MatChipsModule, MatIconModule],
+  imports: [RouterLink],
   templateUrl: './article-layout.component.html',
   styleUrl: './article-layout.component.scss',
 })
