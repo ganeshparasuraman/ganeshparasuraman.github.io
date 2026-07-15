@@ -1,0 +1,48 @@
+# How blogs integrate into THIS Angular app.
+#
+# This app does NOT use a runtime markdown loader. Each blog is a lazy-loaded
+# standalone component that wraps its content in <app-article-layout>. The blog
+# catalog (src/app/shared/blogs.ts) is the single source of truth that drives
+# the home grid and the nav menu. Routes are flat (e.g. /genai-flow), not
+# namespaced under /blog.
+angularIntegration:
+  contentModel: standalone-component        # NOT markdown-at-runtime
+  sourceOfTruth: src/app/shared/blogs.ts    # the BLOGS array
+  routesFile: src/app/app.routes.ts
+  componentDir: src/app/pages/{dir}          # {dir} is usually the slug
+  articleShell: src/app/shared/article-layout/article-layout.component.ts
+  assetSource: public/assets/blog/{slug}     # served at /assets/blog/{slug}/
+  routePattern: /{slug}                       # flat, top-level
+
+  # Derived artifact only — the UI does not read this at runtime. Generated
+  # from BLOGS by tools/generate-blog-index.ts for SEO / sitemap / Medium.
+  derivedIndex: public/blog-index.json
+
+  requiredPages:
+    - /                # home grid (auto-includes any BLOGS entry)
+    - /{slug}          # the blog's own page (a standalone component)
+
+  # What the angular-integration-agent produces for an APPROVED blog:
+  generatedFiles:
+    - src/app/pages/{slug}/{slug}.component.ts    # standalone, imports ArticleLayoutComponent
+    - src/app/pages/{slug}/{slug}.component.html  # <app-article-layout> + .article-body content
+    - src/app/pages/{slug}/{slug}.component.scss  # usually empty; shared styles live in styles.scss
+
+  # The component HTML follows the existing convention:
+  #   <app-article-layout eyebrow=".." heading=".." subtitle=".."
+  #                        [meta]="[...]" [toc]="toc"> ...article body... </app-article-layout>
+  # Body uses the global classes in src/styles.scss: .lead, .callout, .panel-card,
+  # .grid-auto, .flow-diagram, code token spans (.tok-*), etc.
+
+  rules:
+    - Only integrate blogs whose status is APPROVED.
+    - Convert reviewed Markdown into a standalone component; do NOT drop a raw .md into public.
+    - Register the blog in src/app/shared/blogs.ts (BLOGS array) with path "/{slug}",
+      title, icon, faIcon, category, readTime, gradient and blurb.
+    - Add a flat lazy route in src/app/app.routes.ts above the wildcard (**) route.
+    - Build the TocItem[] from the article's H2 section ids.
+    - Reuse <app-article-layout> and the global .article-body styles — do not invent new shells.
+    - Copy images to public/assets/blog/{slug}/ and reference them as /assets/blog/{slug}/...
+    - Never duplicate an existing component or route for the same slug.
+    - Canonical URL for the blog is {siteOrigin}/{slug} (siteOrigin comes from CNAME / BLOG_BASE_URL).
+    - After integration, run: npm run blog:generate-index && npm run blog:generate-routes && npm run build

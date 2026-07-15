@@ -1,0 +1,18 @@
+mediumPolicy:
+  defaultPublishMode: draft
+  canonicalSource: angular
+  maxTags: 5
+  fallbackMode: manual_export
+
+  publishModes:
+    - draft
+    - public
+    - unlisted
+    - manual
+
+  rules:
+    - Publish Angular site first.
+    - Use Angular blog URL as canonical URL.
+    - Do not publish if blog status is not APPROVED.
+    - Do not republish duplicate Medium posts unless force=true.
+    - If API publishing fails, generate manual export under dist/medium.

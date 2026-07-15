@@ -1,0 +1,142 @@
+agents:
+  - agent: draft-intake-agent
+    purpose: Normalize rough draft and validate required metadata.
+    inputs:
+      - content/drafts/{slug}.md
+    outputs:
+      - content/drafts/{slug}.normalized.md
+    responsibilities:
+      - Read draft Markdown.
+      - Validate frontmatter.
+      - Generate slug if missing.
+      - Ensure title exists.
+      - Ensure category and tags exist.
+      - Normalize Markdown formatting.
+      - Do not rewrite the article deeply.
+    mustNot:
+      - Publish content.
+      - Invent facts.
+      - Generate images.
+      - Modify Angular application.
+
+  - agent: blog-rewrite-agent
+    purpose: Rewrite the rough draft into a polished technical blog.
+    inputs:
+      - content/drafts/{slug}.normalized.md
+    outputs:
+      - content/reviewed/{slug}.md
+    responsibilities:
+      - Rephrase the blog.
+      - Improve grammar.
+      - Improve flow.
+      - Add strong introduction.
+      - Add clear section headings.
+      - Add practical conclusion.
+      - Preserve author voice.
+      - Preserve original opinion.
+      - Add examples only when logically supported.
+      - Mark unclear points as author-review-needed.
+    mustNot:
+      - Add fake statistics.
+      - Add fake citations.
+      - Change the argument.
+      - Publish directly.
+    statusChange:
+      from: DRAFT
+      to: REVIEW_REQUIRED
+
+  - agent: seo-agent
+    purpose: Generate SEO metadata and social media snippets.
+    inputs:
+      - content/reviewed/{slug}.md
+    outputs:
+      - content/reviewed/{slug}.seo.json
+      - content/reviewed/{slug}.social.json
+    rules:
+      metaDescriptionMaxLength: 160
+      xPostMaxLength: 280
+      linkedInPostStyle: professional, sharp, useful
+
+  - agent: image-agent
+    purpose: Create image prompts and generate images for the blog.
+    inputs:
+      - content/reviewed/{slug}.md
+    outputs:
+      - content/assets/{slug}/cover.png
+      - content/assets/{slug}/thumbnail.png
+      - content/assets/{slug}/diagram.png
+      - content/assets/{slug}/image-prompts.json
+    stylePolicy:
+      defaultStyle: clean technical illustration
+      avoid:
+        - copyrighted logos unless provided by author
+        - real person likeness
+        - political symbols unless blog requires it
+        - misleading charts
+        - unreadable text-heavy images
+
+  - agent: angular-integration-agent
+    purpose: Add the approved blog to the existing Angular app as a standalone component.
+    inputs:
+      - content/reviewed/{slug}.md
+      - content/assets/{slug}
+    outputs:
+      - src/app/pages/{slug}/{slug}.component.ts
+      - src/app/pages/{slug}/{slug}.component.html
+      - src/app/pages/{slug}/{slug}.component.scss
+      - src/app/shared/blogs.ts            # append BLOGS entry (source of truth)
+      - src/app/app.routes.ts              # add flat lazy route before the ** route
+      - public/assets/blog/{slug}          # via tools/copy-blog-assets.ts
+      - public/blog-index.json             # derived, via tools/generate-blog-index.ts
+    rules:
+      - Reuse <app-article-layout> + global .article-body styles; do not create a new shell.
+      - Route is flat: /{slug}. Canonical URL is {siteOrigin}/{slug}.
+      - Build TocItem[] from the article H2 section ids.
+    mustNot:
+      - Modify draft files.
+      - Publish to Medium.
+      - Rewrite blog content.
+      - Add a runtime markdown loader or a /blog/{slug} route.
+      - Duplicate an existing component or route for the same slug.
+
+  - agent: validation-agent
+    purpose: Validate blog content, assets, Angular integration, and build.
+    checks:
+      content:
+        - required frontmatter exists
+        - only one H1
+        - no TODO markers
+        - no broken local images
+        - no empty sections
+      seo:
+        - meta title exists
+        - meta description exists
+        - meta description length <= 160
+        - canonical URL exists
+      angular:
+        - blog registered in src/app/shared/blogs.ts (BLOGS)
+        - flat route for /{slug} exists in src/app/app.routes.ts (blog:generate-routes)
+        - standalone component exists under src/app/pages/{slug}/
+        - public/blog-index.json regenerates and is valid JSON (blog:generate-index)
+        - npm run build succeeds
+      medium:
+        - Medium Markdown exists
+        - Medium tags <= 5
+        - canonical URL points to Angular blog URL
+
+  - agent: medium-publisher-agent
+    purpose: Publish the approved blog to Medium or create a Medium-ready export.
+    inputs:
+      - content/reviewed/{slug}.md
+      - content/reviewed/{slug}.seo.json
+      - content/assets/{slug}
+    outputs:
+      - medium draft or public post
+      - dist/medium/{slug}.md
+      - dist/medium/{slug}.metadata.json
+      - publishing-registry.json update
+    defaultPublishMode: draft
+    mustNot:
+      - Publish if Angular publishing failed.
+      - Publish if status is not APPROVED.
+      - Publish duplicate Medium post unless force=true.

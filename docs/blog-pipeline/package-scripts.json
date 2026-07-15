@@ -1,0 +1,12 @@
+{
+  "_comment": "Reference copy of the blog:* scripts already merged into the repo's package.json (paths point at scripts/blog/). Tools run via 'npx tsx' — no new dependency is added to the Angular app.",
+  "scripts": {
+    "blog:validate": "npx --yes tsx scripts/blog/validate-blog.ts",
+    "blog:generate-index": "npx --yes tsx scripts/blog/generate-blog-index.ts",
+    "blog:generate-routes": "npx --yes tsx scripts/blog/generate-routes.ts",
+    "blog:copy-assets": "npx --yes tsx scripts/blog/copy-blog-assets.ts",
+    "blog:publish-medium": "npx --yes tsx scripts/blog/publish-medium.ts",
+    "blog:update-registry": "npx --yes tsx scripts/blog/update-publish-registry.ts",
+    "blog:build": "npm run blog:validate && npm run blog:generate-index && npm run blog:generate-routes && npm run build"
+  }
+}

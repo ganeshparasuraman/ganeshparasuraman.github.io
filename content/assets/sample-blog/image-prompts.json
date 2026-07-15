@@ -1,0 +1,20 @@
+{
+  "cover": {
+    "file": "cover.png",
+    "size": "1600x900",
+    "prompt": "Clean technical illustration of a metadata-driven data platform, showing data sources, metadata control plane, processing engines, lakehouse storage, BI, and AI agents. Modern architecture diagram style, minimal text.",
+    "altText": "Metadata-driven data platform architecture with metadata control plane, data processing, lakehouse storage, BI, and AI agents."
+  },
+  "thumbnail": {
+    "file": "thumbnail.png",
+    "size": "1200x630",
+    "prompt": "Professional blog thumbnail showing metadata as the control plane connecting data engineering, governance, analytics, and AI systems.",
+    "altText": "Metadata as the control plane connecting governance, analytics, and AI."
+  },
+  "diagram": {
+    "file": "diagram.png",
+    "size": "1600x1000",
+    "prompt": "Architecture diagram showing draft data sources flowing into metadata catalog, processing engines, lakehouse zones, semantic layer, and AI agents.",
+    "altText": "Architecture diagram of metadata-first data platform."
+  }
+}

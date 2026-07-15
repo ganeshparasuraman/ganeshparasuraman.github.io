@@ -1,0 +1,30 @@
+imagePolicy:
+  defaultStyle: clean technical illustration
+  outputDirectory: content/assets/{slug}
+  publicDirectory: public/assets/blog/{slug}
+
+  imageTypes:
+    cover:
+      required: true
+      fileName: cover.png
+      size: 1600x900
+      purpose: Blog hero image
+
+    thumbnail:
+      required: true
+      fileName: thumbnail.png
+      size: 1200x630
+      purpose: Open Graph and social sharing
+
+    diagram:
+      required: false
+      fileName: diagram.png
+      size: 1600x1000
+      purpose: Architecture or concept explanation
+
+  rules:
+    - Generate alt text for every image.
+    - Avoid unreadable text-heavy images.
+    - Avoid copyrighted logos unless explicitly provided by the author.
+    - Avoid real person likeness unless explicitly approved.
+    - Avoid misleading charts or fake data visualization.

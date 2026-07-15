@@ -52,6 +52,14 @@ export const routes: Routes = [
     title: 'Understanding the GenAI Flow — Prompt Engineering to Agentic Workflows & MCP',
   },
   {
+    path: 'evolution-of-ai-led-engineering-from-prompt-to-loop-engineering',
+    loadComponent: () =>
+      import(
+        './pages/evolution-of-ai-led-engineering-from-prompt-to-loop-engineering/evolution-of-ai-led-engineering-from-prompt-to-loop-engineering.component'
+      ).then((m) => m.EvolutionOfAiLedEngineeringFromPromptToLoopEngineeringComponent),
+    title: 'Evolution of AI Led Engineering: From Prompt to Loop Engineering',
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent),

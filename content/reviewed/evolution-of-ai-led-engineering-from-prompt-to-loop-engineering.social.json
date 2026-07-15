@@ -1,0 +1,4 @@
+{
+  "linkedIn": "Prompt engineering gets you a good demo. It doesn't get you a reliable AI application.\n\nThe real progression looks like this: Prompt Engineering → Context Engineering → Harness Engineering → Loop Engineering.\n\nEach stage exists because the one before it wasn't enough on its own — a good prompt without the right context stalls, good context without a harness is unsafe to act on, and a harness without a loop can't handle multi-step work.\n\nI wrote up the four stages with a practical example: an AI agent fixing a failed data pipeline, walked through at each stage of maturity.",
+  "xPost": "Prompt engineering → Context engineering → Harness engineering → Loop engineering.\n\nA good prompt alone doesn't make an AI application reliable. Here's how each stage fixes what the last one couldn't."
+}

@@ -1,0 +1,71 @@
+workflowName: draft-to-angular-and-medium-blog-publishing
+
+sourceOfTruth: angular-blog
+defaultAuthor: Ganesh Parasuraman
+
+stages:
+  - name: draft_intake
+    agent: draft-intake-agent
+    input: content/drafts/{slug}.md
+    output: content/drafts/{slug}.normalized.md
+
+  - name: rewrite_blog
+    agent: blog-rewrite-agent
+    input: content/drafts/{slug}.normalized.md
+    output: content/reviewed/{slug}.md
+
+  - name: generate_seo
+    agent: seo-agent
+    input: content/reviewed/{slug}.md
+    output:
+      - content/reviewed/{slug}.seo.json
+      - content/reviewed/{slug}.social.json
+
+  - name: generate_images
+    agent: image-agent
+    input: content/reviewed/{slug}.md
+    output:
+      - content/assets/{slug}/cover.png
+      - content/assets/{slug}/thumbnail.png
+      - content/assets/{slug}/diagram.png
+      - content/assets/{slug}/image-prompts.json
+
+  - name: add_to_angular
+    agent: angular-integration-agent
+    input:
+      - content/reviewed/{slug}.md
+      - content/assets/{slug}
+    # Component model (see specs/angular.integration.yaml): generate a standalone
+    # component, register the blog in BLOGS, add a flat route, copy assets.
+    output:
+      - src/app/pages/{slug}/{slug}.component.ts
+      - src/app/pages/{slug}/{slug}.component.html
+      - src/app/pages/{slug}/{slug}.component.scss
+      - src/app/shared/blogs.ts            # append BLOGS entry
+      - src/app/app.routes.ts              # add flat lazy route
+      - public/assets/blog/{slug}          # via tools/copy-blog-assets.ts
+      - public/blog-index.json             # derived, via tools/generate-blog-index.ts
+
+  - name: validate_site
+    agent: validation-agent
+    checks:
+      - metadata_validation     # npm run blog:validate
+      - image_validation
+      - route_validation        # npm run blog:generate-routes (BLOGS ↔ app.routes.ts)
+      - index_validation        # npm run blog:generate-index
+      - angular_build           # npm run build
+
+  - name: publish_medium
+    agent: medium-publisher-agent
+    input: content/reviewed/{slug}.md
+    output:
+      - medium_draft
+      - medium_url
+      - publishing_registry_update
+
+publishPolicy:
+  requireHumanApproval: true
+  publishAngularFirst: true
+  publishMediumSecond: true
+  mediumDefaultMode: draft
+  canonicalSource: angular

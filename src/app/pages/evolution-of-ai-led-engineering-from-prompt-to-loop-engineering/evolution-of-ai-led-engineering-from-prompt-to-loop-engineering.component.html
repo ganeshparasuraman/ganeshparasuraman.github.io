@@ -1,0 +1,286 @@
+<app-article-layout
+  eyebrow="AI · Agentic Engineering"
+  heading="Evolution of AI Led Engineering: From Prompt to Loop Engineering"
+  subtitle="How AI-led engineering is evolving from prompt engineering to context, harness, and loop engineering."
+  [meta]="['Ganesh Parasuraman', '6 min read', 'July 2026']"
+  [toc]="toc"
+>
+  <p class="lead">
+    The first generation of generative AI applications focused heavily on prompt engineering.
+    Developers experimented with instructions such as:
+  </p>
+
+  <blockquote>"Act as a senior software architect and review this code."</blockquote>
+
+  <p>
+    A better prompt often produced a better response. This led to techniques such as role prompting,
+    few-shot examples, structured output instructions, and chain-of-thought-style task decomposition.
+  </p>
+
+  <p>
+    However, as AI applications moved from demos to production systems, teams discovered an important
+    limitation: <strong>a good prompt alone does not create a reliable application.</strong>
+  </p>
+
+  <p>The evolution of AI application development can be understood through four stages:</p>
+
+  <blockquote>Prompt Engineering → Context Engineering → Harness Engineering → Loop Engineering</blockquote>
+
+  <p>Each stage exists because the one before it, on its own, was not enough to make an AI application dependable.</p>
+
+  <!-- ═══ PROMPT ENGINEERING ═══ -->
+  <section id="prompt-engineering">
+    <div class="section-tag">Stage 1</div>
+    <h2>1. Prompt Engineering: Improving the Instruction</h2>
+    <p>Prompt engineering focuses on how a request is written. A prompt typically defines:</p>
+    <ul>
+      <li>The task</li>
+      <li>The role of the model</li>
+      <li>The desired output format</li>
+      <li>Constraints</li>
+      <li>Examples of expected results</li>
+    </ul>
+
+    <p>For example:</p>
+    <blockquote>
+      "Analyse this Java service, identify performance problems, and return the findings as a table
+      containing severity, explanation, and recommendation."
+    </blockquote>
+
+    <p>This is much better than simply saying:</p>
+    <blockquote>"Review this code."</blockquote>
+
+    <p>
+      Prompt engineering is useful, but it mainly optimizes a single interaction. It assumes the model
+      already has everything required to complete the task. In real applications, that assumption is
+      rarely true.
+    </p>
+  </section>
+
+  <!-- ═══ CONTEXT ENGINEERING ═══ -->
+  <section id="context-engineering">
+    <div class="section-tag">Stage 2</div>
+    <h2>2. Context Engineering: Giving the Model the Right Information</h2>
+    <p>
+      Context engineering focuses on deciding what information should be provided to the model at the
+      time of execution. The context may include:
+    </p>
+    <ul>
+      <li>User instructions and conversation history</li>
+      <li>Relevant documents, database records, and source code</li>
+      <li>API responses and business rules</li>
+      <li>Previous decisions and tool outputs</li>
+    </ul>
+
+    <p>
+      Consider an AI assistant reviewing a production incident. A strong prompt will not help much
+      unless the model also receives application logs, deployment history, architecture details, recent
+      code changes, monitoring metrics, and known operational procedures.
+    </p>
+
+    <p>
+      Context engineering is therefore about selecting, organizing, compressing, and prioritizing
+      information. The goal is not to send everything to the model — too much irrelevant context can
+      reduce quality, increase cost, and confuse the reasoning process. The real objective is to provide
+      the smallest amount of high-quality context required to make the correct decision.
+    </p>
+
+    <p>
+      Prompt engineering improves the question. Context engineering improves what the model knows
+      before answering it.
+    </p>
+  </section>
+
+  <!-- ═══ HARNESS ENGINEERING ═══ -->
+  <section id="harness-engineering">
+    <div class="section-tag">Stage 3</div>
+    <h2>3. Harness Engineering: Building the System Around the Model</h2>
+    <p>
+      Once the model has a good prompt and relevant context, the next challenge is reliability. This is
+      where harness engineering becomes important.
+    </p>
+
+    <p>
+      A harness is the software structure surrounding the model. It controls how the model interacts
+      with tools, data, applications, and validation mechanisms. An AI harness may include:
+    </p>
+    <ul>
+      <li>Prompt templates and context retrieval</li>
+      <li>Tool definitions and access controls</li>
+      <li>Structured-output schemas and validation rules</li>
+      <li>Retry policies and guardrails</li>
+      <li>Logging and tracing</li>
+      <li>Human approval steps and cost/token limits</li>
+    </ul>
+
+    <p>
+      For example, an AI agent asked to create a data pipeline should not directly execute whatever code
+      it generates. The harness may require the agent to read the existing pipeline configuration,
+      generate a proposed specification, validate it against a schema, check security and governance
+      rules, run automated tests, and request approval before deployment.
+    </p>
+
+    <p>
+      The model provides intelligence, but the harness provides control. Without a harness, the model
+      behaves like a talented individual working without tools, policies, or supervision. With a
+      harness, it becomes part of a dependable software system.
+    </p>
+  </section>
+
+  <!-- ═══ LOOP ENGINEERING ═══ -->
+  <section id="loop-engineering">
+    <div class="section-tag">Stage 4</div>
+    <h2>4. Loop Engineering: Enabling Continuous Execution and Improvement</h2>
+    <p>
+      Many real-world tasks cannot be completed in one model call. A software coding agent may need to
+      read the requirement, inspect the repository, modify code, run tests, analyse failures, correct
+      the implementation, and run the tests again.
+    </p>
+
+    <p>
+      This repeated observe-decide-act-evaluate cycle is called a loop. Loop engineering focuses on
+      designing and controlling this iterative execution.
+    </p>
+
+    <p>A simple agentic loop looks like this:</p>
+    <ol>
+      <li>Observe the current state.</li>
+      <li>Reason about the next action.</li>
+      <li>Act using a tool.</li>
+      <li>Evaluate the result.</li>
+      <li>Repeat until the goal is achieved or a stopping condition is reached.</li>
+    </ol>
+
+    <figure class="article-figure">
+      <img
+        src="/assets/blog/evolution-of-ai-led-engineering-from-prompt-to-loop-engineering/diagram.png"
+        alt="Agentic loop diagram: read code, modify code, run tests, analyse failures, with a decision branch back into the loop or forward to task completion."
+      />
+      <figcaption>The same loop, written out:</figcaption>
+    </figure>
+    <pre class="ascii-diagram">Read code
+   ↓
+Identify change
+   ↓
+Modify code
+   ↓
+Run tests
+   ↓
+Tests failed?
+   ├── Yes → Analyse failure and modify again
+   └── No  → Complete the task</pre>
+
+    <p>
+      Loop engineering is not merely asking the model to "try again." A reliable loop needs clear
+      controls:
+    </p>
+    <ul>
+      <li>What is the goal, and what represents progress?</li>
+      <li>When should the agent retry, and how many retries are allowed?</li>
+      <li>What actions are permitted, and how is success validated?</li>
+      <li>When should a human intervene, and how is an infinite loop prevented?</li>
+    </ul>
+
+    <p>
+      The quality of an agentic system often depends more on the design of its loop than on the wording
+      of its initial prompt.
+    </p>
+  </section>
+
+  <!-- ═══ THE EVOLUTION ═══ -->
+  <section id="evolution">
+    <div class="section-tag">Summary</div>
+    <h2>The Evolution, Summarized</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>Key Question</th>
+          <th>Focus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Prompt Engineering</td>
+          <td>How should we ask the model?</td>
+          <td>Instructions</td>
+        </tr>
+        <tr>
+          <td>Context Engineering</td>
+          <td>What should the model know before it acts?</td>
+          <td>Relevant information</td>
+        </tr>
+        <tr>
+          <td>Harness Engineering</td>
+          <td>What controls, tools, and validations should surround the model?</td>
+          <td>Reliability and governance</td>
+        </tr>
+        <tr>
+          <td>Loop Engineering</td>
+          <td>How should the system repeatedly act, evaluate, and improve until the goal is achieved?</td>
+          <td>Autonomous execution</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Each stage builds on the previous one:</p>
+    <ul>
+      <li>A loop still needs a harness.</li>
+      <li>A harness still needs good context.</li>
+      <li>Good context still needs clear prompts.</li>
+    </ul>
+  </section>
+
+  <!-- ═══ PRACTICAL EXAMPLE ═══ -->
+  <section id="example">
+    <div class="section-tag">Walkthrough</div>
+    <h2>A Practical Example</h2>
+    <p>Imagine building an AI agent that fixes a failed data pipeline.</p>
+
+    <div class="grid-auto">
+      <div class="panel-card">
+        <strong>Prompt engineering only</strong>
+        <p>"Fix the failed Spark pipeline."</p>
+      </div>
+      <div class="panel-card">
+        <strong>+ Context engineering</strong>
+        <p>The agent also receives the pipeline code, error logs, input schema, cluster configuration, and recent changes.</p>
+      </div>
+      <div class="panel-card">
+        <strong>+ Harness engineering</strong>
+        <p>The agent is allowed to read files, modify only approved modules, run tests in a sandbox, validate the pipeline configuration, and produce an audit trail.</p>
+      </div>
+      <div class="panel-card">
+        <strong>+ Loop engineering</strong>
+        <p>The agent inspects the failure, forms a hypothesis, modifies the code, runs the pipeline tests, analyses the result, and repeats until the tests pass or escalation is required.</p>
+      </div>
+    </div>
+
+    <p>
+      The application has now evolved from a chatbot response into an engineered problem-solving
+      system.
+    </p>
+  </section>
+
+  <!-- ═══ FINAL ═══ -->
+  <section id="final">
+    <div class="section-tag">Final Thought</div>
+    <h2>Final Thought</h2>
+    <p>
+      Prompt engineering made large language models easier to communicate with. Context engineering
+      made them better informed. Harness engineering made them safer and more dependable. Loop
+      engineering is making them capable of completing longer, multi-step tasks.
+    </p>
+    <p>
+      The future of AI application development will not be about discovering one perfect prompt. It
+      will be about designing systems in which prompts, context, tools, controls, and feedback loops
+      work together.
+    </p>
+  </section>
+
+  <div class="conclusion">
+    <p>The prompt starts the task. The loop completes it.</p>
+  </div>
+
+  <p class="source-note">Ganesh Parasuraman · AI Engineering Series · July 2026</p>
+</app-article-layout>

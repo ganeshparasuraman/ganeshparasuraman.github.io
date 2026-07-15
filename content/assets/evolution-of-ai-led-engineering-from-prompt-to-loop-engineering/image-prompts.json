@@ -1,0 +1,20 @@
+{
+  "cover": {
+    "file": "cover.png",
+    "size": "1600x900",
+    "prompt": "Clean technical illustration showing four connected stages labeled Prompt, Context, Harness, and Loop, arranged left to right with an arrow flow, each stage subtly nested inside the next like layered rings, representing the maturity progression of AI application engineering. Modern architecture-diagram style, minimal text, blue-to-green gradient palette.",
+    "altText": "Four-stage progression from prompt engineering to context, harness, and loop engineering, shown as nested layered rings."
+  },
+  "thumbnail": {
+    "file": "thumbnail.png",
+    "size": "1200x630",
+    "prompt": "Professional blog thumbnail depicting a looping arrow cycle (observe, reason, act, evaluate) wrapped around a small AI agent icon, with a faint prompt-to-loop progression bar beneath it. Clean technical illustration style, minimal text.",
+    "altText": "Looping observe-reason-act-evaluate cycle wrapped around an AI agent, representing loop engineering."
+  },
+  "diagram": {
+    "file": "diagram.png",
+    "size": "1600x1000",
+    "prompt": "Concept diagram of an agentic loop: a cycle of four boxes (Read code, Modify code, Run tests, Analyse failures) connected by arrows, with a decision diamond (\"Tests passed?\") branching back into the loop or forward to \"Complete task\". Clean technical illustration style, minimal text, matches a software architecture diagram.",
+    "altText": "Agentic loop diagram: read code, modify code, run tests, analyse failures, with a decision branch back into the loop or forward to task completion."
+  }
+}

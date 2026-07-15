@@ -76,6 +76,16 @@ export const BLOGS: BlogTile[] = [
     gradient: 'linear-gradient(135deg, #4285F4, #9334E6)',
     blurb: 'From a simple prompt to agents, MCP, and reasoning patterns (CoT, ReAct, ToT) — one resume use case.',
   },
+  {
+    path: '/evolution-of-ai-led-engineering-from-prompt-to-loop-engineering',
+    title: 'Evolution of AI Led Engineering: From Prompt to Loop Engineering',
+    icon: 'loop',
+    faIcon: 'fa-solid fa-arrows-rotate',
+    category: 'AI',
+    readTime: '6 min read',
+    gradient: 'linear-gradient(135deg, #1A73E8, #34A853)',
+    blurb: 'How AI-led engineering is evolving from prompt engineering to context, harness, and loop engineering.',
+  },
 ];
 
 export interface ProfileTile {
